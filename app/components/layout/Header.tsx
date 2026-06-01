@@ -1,8 +1,10 @@
 'use client';
 
 import Link from 'next/link';
+import { OptimizedImage, IMAGE_SIZES } from '@/app/components/ui/OptimizedImage';
 import { useMemo, useState } from 'react';
 import { useWebBuilder } from '@/app/providers/WebBuilderProvider';
+import { getImageSrc } from '@/app/lib/utils';
 import {
   getBrandName,
   getHeaderNavItems,
@@ -45,6 +47,11 @@ export function Header() {
   const [isOpen, setIsOpen] = useState(false);
 
   const businessName = getBrandName(site) || 'ClearSky';
+  const logoImage = useMemo(() => {
+    const url = site?.theme?.logoUrl || site?.footer?.logo?.url;
+    return url ? getImageSrc(url) : undefined;
+  }, [site?.theme?.logoUrl, site?.footer?.logo?.url]);
+  const logoAlt = site?.footer?.logo?.altText?.trim() || `${businessName} logo`;
   const navItems = useMemo(() => buildNavItems(pages), [pages]);
   const homePage = useMemo(() => pages.find((p) => p.pageType === 'home'), [pages]);
 
@@ -63,15 +70,29 @@ export function Header() {
     <nav className="fixed w-full z-50 bg-[#f0f7f5]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-14">
-          <div className="flex items-center space-x-2">
-            <Link href="/" className="text-[#333333] text-xl font-medium">
-              {businessName || 'ClearSky.'}
+          <div className="flex items-center gap-6 lg:gap-8">
+            <Link href="/" className="shrink-0 flex items-center" aria-label={businessName}>
+              {logoImage ? (
+                <OptimizedImage
+                  src={logoImage}
+                  alt={logoAlt}
+                  width={400}
+                  height={120}
+                  sizes={IMAGE_SIZES.logo}
+                  className="h-9 w-auto max-w-[160px] object-contain sm:h-10 sm:max-w-[200px]"
+                  priority
+                />
+              ) : (
+                <span className="text-[#333333] text-xl font-medium">{businessName}</span>
+              )}
             </Link>
-            {navItems.map((item) => (
-              <Link key={item.id} href={item.href} className={DESKTOP_LINK_CLASS}>
-                {item.name}
-              </Link>
-            ))}
+            <div className="hidden md:flex items-center gap-5 lg:gap-6">
+              {navItems.map((item) => (
+                <Link key={item.id} href={item.href} className={DESKTOP_LINK_CLASS}>
+                  {item.name}
+                </Link>
+              ))}
+            </div>
           </div>
 
           <div className="hidden md:flex items-center">

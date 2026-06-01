@@ -20,6 +20,7 @@ import { CTA3Section } from '@/app/components/sections/CTA3Section';
 import { GallerySection } from '@/app/components/sections/GallerySection';
 import { ContactSection } from '@/app/components/sections/ContactSection';
 import { BlogSection } from '@/app/components/sections/BlogSection';
+import { ServingAreasSection } from '@/app/components/sections/ServingAreasSection';
 import api from '@/app/lib/fetch-api';
 import { Page, ServiceAreaPage } from '@/app/lib/types';
 import { PageContentLoader } from '@/app/components/ui/PageContentLoader';
@@ -79,7 +80,7 @@ export default function PageSlugClient({ pageSlug: pageSlugProp }: PageSlugClien
 
   const displayPage = currentPage || serviceAreaPage;
 
-  if (!displayPage && !loading) {
+  if (!displayPage) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-4 text-center" style={{ backgroundColor: themeColors.pageBackground }}>
         <h2 className="text-2xl font-bold mb-2" style={{ color: themeColors.lightPrimaryText }}>Page Not Found</h2>
@@ -91,6 +92,9 @@ export default function PageSlugClient({ pageSlug: pageSlugProp }: PageSlugClien
 
   const page: Page | null = currentPage;
   const pageType = page?.pageType;
+  const showServingAreas =
+    page?.servingAreasSection?.enabled !== false &&
+    (page?.servingAreasSection != null || pageType === 'home');
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: themeColors.pageBackground }}>
@@ -157,6 +161,12 @@ export default function PageSlugClient({ pageSlug: pageSlugProp }: PageSlugClien
             <HeroSection hero={page?.hero} />
             <TestimonialsSection testimonialsSection={page?.testimonialsSection} />
           </>
+        )}
+
+        {showServingAreas && (
+          <ServingAreasSection
+            servingAreasSection={page?.servingAreasSection ?? { enabled: true }}
+          />
         )}
       </main>
 

@@ -9,7 +9,7 @@ import { Footer } from '@/app/components/layout/Footer';
 import { BlogPost } from '@/app/lib/types';
 import { TiptapRenderer } from '@/app/components/ui/TiptapRenderer';
 import { getImageSrc } from '@/app/lib/utils';
-import { OptimizedImage } from '@/app/components/ui/OptimizedImage';
+import { OptimizedImage, IMAGE_QUALITY_HIGH, IMAGE_SIZES } from '@/app/components/ui/OptimizedImage';
 import { useThemeColors, useThemeFonts } from '@/app/hooks/useTheme';
 import { SeoHead } from '@/app/components/ui/SeoHead';
 import { normalizeSeoImage, tiptapToText, truncate } from '@/app/lib/seo';
@@ -77,7 +77,8 @@ export default function BlogPostPage() {
                                 src={getImageSrc(post.featuredImage.url)}
                                 alt={post.featuredImage.altText || post.title}
                                 fill
-                                sizes="100vw"
+                                quality={IMAGE_QUALITY_HIGH}
+                                sizes={IMAGE_SIZES.fullWidth}
                                 priority
                                 className="object-cover"
                             />

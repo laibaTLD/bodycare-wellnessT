@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import Image from 'next/image';
+import { OptimizedImage, IMAGE_SIZES } from '@/app/components/ui/OptimizedImage';
 import { Manrope, Cormorant } from 'next/font/google';
 import { useMemo } from 'react';
 import type { BusinessHours, Site } from '@/app/lib/types';
@@ -277,11 +277,12 @@ export function Footer() {
             <div className="flex flex-col items-center lg:items-start">
               <div className="mb-6 transform hover:scale-105 transition-all duration-300">
                 {logoImage ? (
-                  <Image
+                  <OptimizedImage
                     src={logoImage}
                     alt={site?.footer?.logo?.altText || `${businessName} logo`}
-                    width={200}
-                    height={70}
+                    width={400}
+                    height={140}
+                    sizes={IMAGE_SIZES.logo}
                     className="h-16 w-auto object-contain"
                   />
                 ) : (

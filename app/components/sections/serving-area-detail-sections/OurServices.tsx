@@ -1,196 +1,289 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import Link from 'next/link';
+import { useMemo } from 'react';
+import { useParams } from 'next/navigation';
+import { OptimizedImage, IMAGE_SIZES } from '@/app/components/ui/OptimizedImage';
 import { TiptapRenderer } from '@/app/components/ui/TiptapRenderer';
-import { getImageSrc, cn } from '@/app/lib/utils';
-import { OptimizedImage } from '@/app/components/ui/OptimizedImage';
-import { useThemeColors, useThemeFonts } from '@/app/hooks/useTheme';
+import type { Service } from '@/app/lib/types';
 import { useWebBuilder } from '@/app/providers/WebBuilderProvider';
-import { ArrowUpRight, Check } from 'lucide-react';
+import { useSectionTheme } from '@/app/hooks/useSectionTheme';
+import { cn, getImageSrc } from '@/app/lib/utils';
+import { tiptapToText } from '@/app/lib/seo';
+import { normalizeSlug, resolveServiceSlug } from '@/app/lib/serviceAreaSlugs';
 
 interface OurServicesProps {
-  services: any;
+  /** CMS `ourServices` from builder (title, description, linked service refs) */
+  services?: unknown;
+  /** Service area page parent service — auto-included per builder */
+  pageServiceId?: string;
   className?: string;
 }
 
-export const OurServices: React.FC<OurServicesProps> = ({ services, className }) => {
-  const themeColors = useThemeColors();
-  const themeFonts = useThemeFonts();
-  const { services: allServices } = useWebBuilder();
-  const [activeCategory, setActiveCategory] = useState('all');
+type SectionConfig = {
+  title?: unknown;
+  description?: unknown;
+  label?: string;
+};
 
-  const serviceItems = useMemo(() => {
-    if (services.items && services.items.length > 0) return services.items;
-    if (services.serviceIds && allServices) {
-      return allServices.filter((s: any) => services.serviceIds.includes(s._id || s.id));
-    }
-    if (Array.isArray(services)) return services;
-    return [];
-  }, [services, allServices]);
+type DisplayService = {
+  id: string;
+  name: string;
+  description: string;
+  price: string;
+  imageUrl: string;
+  imageAlt: string;
+  href: string;
+};
 
-  const filteredServices = activeCategory === 'all' 
-    ? serviceItems
-    : serviceItems.filter((service: any) => service.category === activeCategory);
+const FALLBACK_IMAGE =
+  'https://images.pexels.com/photos/6195895/pexels-photo-6195895.jpeg';
 
-  const categories = ['all', ...Array.from(new Set(serviceItems.map((service: any) => service.category).filter(Boolean)))] as string[];
+function formatServicePrice(service: Service): string {
+  if (service.price?.trim()) return service.price.trim();
+  if (service.priceType === 'quote') return 'Quote';
+  if (service.priceType === 'range') return 'Custom';
+  return '';
+}
+
+function mapLiveService(service: Service): DisplayService {
+  const imageUrl = service.thumbnailImage?.url
+    ? getImageSrc(service.thumbnailImage.url)
+    : service.galleryImages?.[0]?.url
+      ? getImageSrc(service.galleryImages[0].url)
+      : FALLBACK_IMAGE;
+
+  return {
+    id: service._id,
+    name: service.name,
+    description: tiptapToText(service.shortDescription) || '',
+    price: formatServicePrice(service),
+    imageUrl,
+    imageAlt:
+      service.thumbnailImage?.altText ||
+      service.galleryImages?.[0]?.altText ||
+      service.name,
+    href: `/service/${resolveServiceSlug(service)}`,
+  };
+}
+
+function isVisibleService(service: Service): boolean {
+  return service.status !== 'draft' && service.status !== 'archived';
+}
+
+function orderServicesForPage(
+  services: Service[],
+  pageServiceId?: string,
+  serviceSlugFromUrl?: string
+): Service[] {
+  const normSlug = serviceSlugFromUrl ? normalizeSlug(serviceSlugFromUrl) : '';
+  const primary =
+    (pageServiceId && services.find((s) => s._id === pageServiceId)) ||
+    (normSlug && services.find((s) => resolveServiceSlug(s) === normSlug));
+
+  if (!primary) return services;
+  return [primary, ...services.filter((s) => s._id !== primary._id)];
+}
+
+function buildDisplayServices(
+  liveServices: Service[],
+  pageServiceId?: string,
+  serviceSlugFromUrl?: string
+): DisplayService[] {
+  const visible = liveServices.filter(isVisibleService);
+  return orderServicesForPage(visible, pageServiceId, serviceSlugFromUrl).map(mapLiveService);
+}
+
+function normalizeSectionConfig(services: unknown): SectionConfig | null {
+  if (!services || typeof services !== 'object') return { title: undefined, description: undefined };
+
+  const data = services as Record<string, unknown>;
+  if (data.enabled === false) return null;
+
+  return {
+    title: data.title ?? data.label,
+    description: data.description ?? data.subtitle,
+    label: typeof data.label === 'string' ? data.label : undefined,
+  };
+}
+
+function hasRichContent(content: unknown): boolean {
+  if (content == null || content === '') return false;
+  if (typeof content === 'object') return Boolean(tiptapToText(content));
+  return Boolean(String(content).trim());
+}
+
+export const OurServices: React.FC<OurServicesProps> = ({
+  services,
+  pageServiceId,
+  className,
+}) => {
+  const theme = useSectionTheme();
+  const { colors, fonts } = theme;
+  const { services: liveServices } = useWebBuilder();
+  const params = useParams();
+  const serviceSlugFromUrl =
+    typeof params?.serviceSlug === 'string' ? params.serviceSlug : '';
+
+  const config = useMemo(() => normalizeSectionConfig(services), [services]);
+
+  const displayServices = useMemo(
+    () => buildDisplayServices(liveServices, pageServiceId, serviceSlugFromUrl),
+    [liveServices, pageServiceId, serviceSlugFromUrl]
+  );
+
+  const titleText = useMemo(() => tiptapToText(config?.title), [config?.title]);
+  const descriptionText = useMemo(
+    () => tiptapToText(config?.description),
+    [config?.description]
+  );
+
+  if (!config) return null;
+  if (!titleText && !descriptionText && !hasRichContent(config.title) && displayServices.length === 0) {
+    return null;
+  }
+
+  const showTitle = hasRichContent(config.title) || Boolean(titleText);
+  const showDescription = hasRichContent(config.description) || Boolean(descriptionText);
+  const borderColor = `color-mix(in srgb, ${colors.mainText} 12%, transparent)`;
+  const eyebrow = config.label?.trim() || 'Services';
 
   return (
-    <section 
-      className={cn('py-24 lg:py-32', className)}
-      style={{ backgroundColor: themeColors.pageBackground }}
+    <section
+      className={cn('relative border-t', className)}
+      style={{
+        backgroundColor: colors.pageBackground,
+        borderColor,
+        fontFamily: fonts.body,
+      }}
     >
-      <div className="container mx-auto px-6 lg:px-12 max-w-7xl">
-        {/* Editorial Header */}
-        <div className="flex flex-col lg:flex-row lg:items-end justify-between mb-20 gap-8">
-          <div className="max-w-2xl">
-            {services.label && (
-              <span 
-                className="text-[10px] tracking-[0.4em] uppercase font-bold opacity-60 block mb-6"
-                style={{ color: themeColors.lightPrimaryText }}
-              >
-                <TiptapRenderer content={services.label} as="inline" />
-              </span>
-            )}
-            {services.title && (
-              <h2 
-                className="text-4xl lg:text-6xl font-semibold tracking-tight leading-[1.1]"
-                style={{ color: themeColors.lightPrimaryText }}
-              >
-                <TiptapRenderer content={services.title} />
-              </h2>
-            )}
-          </div>
-          {services.subtitle && (
-            <div 
-              className="lg:max-w-sm text-lg opacity-70 leading-relaxed"
-              style={{ color: themeColors.lightSecondaryText }}
-            >
-              <TiptapRenderer content={services.subtitle} as="inline" />
-            </div>
-          )}
-          {services.description && (
-            <div 
-              className="lg:max-w-sm text-lg opacity-70 leading-relaxed"
-              style={{ color: themeColors.lightSecondaryText }}
-            >
-              <TiptapRenderer content={services.description} as="inline" />
-            </div>
-          )}
-        </div>
+      <div className="mx-auto w-full max-w-[90rem] px-6 md:px-12 lg:px-16 xl:px-20 py-16 sm:py-20 lg:py-24">
+        <header className="max-w-3xl mb-12 sm:mb-14 lg:mb-16">
+          <p className="text-[11px] font-medium uppercase tracking-[0.28em] mb-6" style={{ fontFamily: fonts.body }}>
+            <span style={{ color: colors.secondaryText }}>[ </span>
+            <span style={{ color: colors.mainText }}>{eyebrow}</span>
+            <span style={{ color: colors.secondaryText }}> ]</span>
+          </p>
 
-        {/* Minimalist Filter */}
-        {categories.length > 1 && (
-          <div className="flex flex-wrap gap-8 mb-16 border-b" style={{ borderColor: `${themeColors.inactive}20` }}>
-            {categories.map((category) => (
-              <button
-                key={category}
-                className={cn(
-                  'pb-4 text-xs font-bold uppercase tracking-widest transition-all relative',
-                  activeCategory === category ? 'opacity-100' : 'opacity-40 hover:opacity-70'
-                )}
-                style={{ 
-                    color: themeColors.lightPrimaryText, 
-                }}
-                onClick={() => setActiveCategory(category)}
-              >
-                {category === 'all' ? 'All Portfolio' : <TiptapRenderer content={category} as="inline" />}
-                {activeCategory === category && (
-                    <div 
-                        className="absolute bottom-0 left-0 w-full h-0.5" 
-                        style={{ backgroundColor: themeColors.primaryButton }}
+          {showTitle && (
+            <h2
+              className="text-[clamp(1.75rem,3.2vw,2.75rem)] font-normal leading-[1.12] tracking-tight"
+              style={{ fontFamily: fonts.heading, color: colors.mainText }}
+            >
+              {hasRichContent(config.title) ? (
+                <TiptapRenderer content={config.title} as="inline" />
+              ) : (
+                titleText
+              )}
+            </h2>
+          )}
+
+          {showDescription && hasRichContent(config.description) && (
+            <div
+              className={cn('mt-5 text-base sm:text-lg font-light leading-relaxed', !showTitle && 'mt-0')}
+              style={{ color: colors.secondaryText }}
+            >
+              <TiptapRenderer content={config.description} />
+            </div>
+          )}
+
+          {showDescription && !hasRichContent(config.description) && descriptionText && (
+            <p
+              className={cn('mt-5 text-base sm:text-lg font-light leading-relaxed', !showTitle && 'mt-0')}
+              style={{ color: colors.secondaryText }}
+            >
+              {descriptionText}
+            </p>
+          )}
+        </header>
+
+        {displayServices.length > 0 && (
+          <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {displayServices.map((service, index) => {
+              const number = String(index + 1).padStart(2, '0');
+              const isExternal =
+                service.href.startsWith('http') ||
+                service.href.startsWith('mailto:') ||
+                service.href.startsWith('tel:');
+
+              const card = (
+                <article
+                  className="flex h-full flex-col overflow-hidden rounded-sm border bg-white transition-shadow hover:shadow-md"
+                  style={{ borderColor }}
+                >
+                  <div className="relative aspect-[4/3] overflow-hidden">
+                    <OptimizedImage
+                      src={service.imageUrl}
+                      alt={service.imageAlt}
+                      fill
+                      sizes={IMAGE_SIZES.card}
+                      className="object-cover transition-transform duration-500 group-hover:scale-105"
                     />
-                )}
-              </button>
-            ))}
-          </div>
+                    {service.price && (
+                      <span
+                        className="absolute top-3 right-3 rounded-full px-3 py-1 text-xs font-medium"
+                        style={{
+                          backgroundColor: colors.pageBackground,
+                          color: colors.mainText,
+                          fontFamily: fonts.body,
+                        }}
+                      >
+                        {service.price}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex flex-1 flex-col p-5 sm:p-6">
+                    <span
+                      className="text-xs tabular-nums mb-2"
+                      style={{ color: colors.secondaryText, opacity: 0.55 }}
+                    >
+                      {number}
+                    </span>
+                    <h3
+                      className="text-lg sm:text-xl leading-snug"
+                      style={{ fontFamily: fonts.heading, color: colors.mainText }}
+                    >
+                      {service.name}
+                    </h3>
+                    {service.description && (
+                      <p
+                        className="mt-2 text-sm sm:text-base leading-relaxed flex-1"
+                        style={{ color: colors.secondaryText }}
+                      >
+                        {service.description}
+                      </p>
+                    )}
+                    <span
+                      className="mt-4 inline-flex items-center gap-1 text-xs font-medium uppercase tracking-[0.15em]"
+                      style={{ color: colors.mainText }}
+                    >
+                      View service
+                      <span aria-hidden>→</span>
+                    </span>
+                  </div>
+                </article>
+              );
+
+              return (
+                <li key={service.id} className="group">
+                  {isExternal ? (
+                    <a href={service.href} className="block h-full">
+                      {card}
+                    </a>
+                  ) : (
+                    <Link href={service.href} className="block h-full">
+                      {card}
+                    </Link>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
         )}
-
-        {/* Services Grid - Only show if services exist */}
-        {filteredServices.length > 0 && (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-16">
-            {filteredServices.map((service: any, index: number) => (
-            <div 
-              key={service.id || index}
-              className="group flex flex-col h-full transition-all duration-500"
-            >
-              {/* Image Container with Reveal */}
-              <div className="relative aspect-[4/5] mb-8 overflow-hidden rounded-[2rem] bg-gray-100">
-                {service.image ? (
-                  <OptimizedImage
-                    src={getImageSrc(service.image)}
-                    alt={service.title || ''}
-                    fill
-                    sizes="(max-width: 1024px) 100vw, 33vw"
-                    className="object-cover transition-transform duration-700 group-hover:scale-110"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center opacity-20">No Image</div>
-                )}
-                
-                {/* Modern Glass Badge */}
-                {service.category && (
-                  <div 
-                    className="absolute top-6 left-6 px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest backdrop-blur-md bg-white/10 border border-white/20 text-white"
-                  >
-                    {service.category}
-                  </div>
-                )}
-
-                {/* Hover Interaction Overlay */}
-                <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-center justify-center">
-                    <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center transform translate-y-4 group-hover:translate-y-0 transition-all duration-500">
-                        <ArrowUpRight size={24} style={{ color: themeColors.primaryButton }} />
-                    </div>
-                </div>
-              </div>
-
-              {/* Service Info */}
-              <div className="flex flex-col flex-grow px-2">
-                <h3 
-                  className="text-2xl font-semibold mb-4 group-hover:italic transition-all duration-300"
-                  style={{ color: themeColors.lightPrimaryText }}
-                >
-                  <TiptapRenderer content={service.title} as="inline" />
-                </h3>
-
-                {service.description && (
-                  <div 
-                    className="text-base opacity-70 leading-relaxed mb-6 line-clamp-2"
-                    style={{ color: themeColors.lightSecondaryText }}
-                  >
-                    <TiptapRenderer content={service.description} />
-                  </div>
-                )}
-
-                {/* Minimalist Features */}
-                {service.features && service.features.length > 0 && (
-                  <div className="space-y-3 mb-8">
-                    {service.features.slice(0, 3).map((feature: string, fIdx: number) => (
-                      <div key={fIdx} className="flex items-center gap-3">
-                        <div className="w-1 h-1 rounded-full" style={{ backgroundColor: themeColors.primaryButton }} />
-                        <span className="text-xs font-medium opacity-60 uppercase tracking-tighter" style={{ color: themeColors.lightPrimaryText }}>
-                          {feature}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* Subtle CTA Link */}
-                <button
-                  className="mt-auto flex items-center gap-2 text-xs font-bold uppercase tracking-widest group/btn"
-                  style={{ color: themeColors.primaryButton }}
-                  onClick={() => service.ctaButton?.url && window.open(service.ctaButton.url, '_blank')}
-                >
-                  <span>{service.ctaButton?.text || 'Explore Service'}</span>
-                  <div className="h-px w-6 transition-all duration-300 group-hover/btn:w-12" style={{ backgroundColor: themeColors.primaryButton }} />
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
       </div>
     </section>
   );
 };
+
+export default OurServices;

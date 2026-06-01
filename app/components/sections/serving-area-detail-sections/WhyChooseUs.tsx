@@ -1,104 +1,240 @@
 'use client';
 
-import React from 'react';
+import { useMemo } from 'react';
 import { TiptapRenderer } from '@/app/components/ui/TiptapRenderer';
+import type { Page } from '@/app/lib/types';
+import { useSectionTheme } from '@/app/hooks/useSectionTheme';
 import { cn } from '@/app/lib/utils';
-import { useThemeColors, useThemeFonts } from '@/app/hooks/useTheme';
+import { tiptapToText } from '@/app/lib/seo';
 
 interface WhyChooseUsProps {
-  whyChooseUs: any;
+  whyChooseUs: unknown;
   className?: string;
 }
 
+type ReasonItem = {
+  title?: unknown;
+  description?: unknown;
+  titleText: string;
+  descriptionText: string;
+};
+
+type SectionData = {
+  title?: unknown;
+  description?: unknown;
+  items: ReasonItem[];
+};
+
+function isStatValue(text: string): boolean {
+  const trimmed = text.trim();
+  if (!trimmed || trimmed.length > 14) return false;
+  if (/[+%]/.test(trimmed)) return true;
+  if (/^\d[\d.,]*\s*(k|m|\+|%|yrs?|years?)?$/i.test(trimmed)) return true;
+  return /^[\d.,]+$/.test(trimmed);
+}
+
+function formatStatValue(text: string): { value: string; suffix: string } {
+  if (text.includes('+')) return { value: text.replace('+', '').trim(), suffix: '+' };
+  if (text.includes('%')) return { value: text.replace('%', '').trim(), suffix: '%' };
+  return { value: text.trim(), suffix: '' };
+}
+
+function normalizeWhyChooseUs(whyChooseUs: unknown): SectionData | null {
+  if (!whyChooseUs || typeof whyChooseUs !== 'object') return null;
+
+  const data = whyChooseUs as Record<string, unknown>;
+  if (data.enabled === false) return null;
+
+  const rawItems = (data.reasons ?? data.items) as Array<{
+    title?: unknown;
+    description?: unknown;
+  }> | undefined;
+
+  const items: ReasonItem[] =
+    rawItems
+      ?.map((item) => ({
+        title: item.title,
+        description: item.description,
+        titleText: tiptapToText(item.title),
+        descriptionText: tiptapToText(item.description),
+      }))
+      .filter((item) => item.titleText || item.descriptionText) ?? [];
+
+  if (!data.title && !data.description && items.length === 0) return null;
+
+  return {
+    title: data.title,
+    description: data.description ?? data.subtitle,
+    items,
+  };
+}
+
+function hasRichContent(content: unknown): boolean {
+  if (content == null || content === '') return false;
+  if (typeof content === 'object') return Boolean(tiptapToText(content));
+  return Boolean(String(content).trim());
+}
+
 export const WhyChooseUs: React.FC<WhyChooseUsProps> = ({ whyChooseUs, className }) => {
-  const themeColors = useThemeColors();
-  const themeFonts = useThemeFonts();
+  const theme = useSectionTheme();
+  const { colors, fonts } = theme;
 
-  // More permissive check - render if there's any content
-  if (!whyChooseUs || (!whyChooseUs.title && !whyChooseUs.description && (!whyChooseUs.reasons || whyChooseUs.reasons.length === 0))) return null;
+  const section = useMemo(() => normalizeWhyChooseUs(whyChooseUs), [whyChooseUs]);
 
-  console.log('🔍 WhyChooseUs section data:', whyChooseUs);
+  const titleText = useMemo(() => tiptapToText(section?.title), [section?.title]);
+  const descriptionText = useMemo(
+    () => tiptapToText(section?.description),
+    [section?.description]
+  );
 
-  // Use reasons as items, or fall back to items if available
-  const items = whyChooseUs.reasons || whyChooseUs.items || [];
+  if (!section) return null;
+
+  const showTitle = hasRichContent(section.title) || Boolean(titleText);
+  const showDescription = hasRichContent(section.description) || Boolean(descriptionText);
+  const borderColor = `color-mix(in srgb, ${colors.mainText} 12%, transparent)`;
 
   return (
-    <section 
-      className={cn('py-20 lg:py-32', className)} 
-      style={{ backgroundColor: themeColors.pageBackground || '#F5F2ED' }}
+    <section
+      className={cn('relative border-t', className)}
+      style={{
+        backgroundColor: colors.sectionBackgroundLight,
+        borderColor,
+        fontFamily: fonts.body,
+      }}
     >
-      <div className="container mx-auto px-6 lg:px-12">
-        {/* Header Area */}
-        <div className="mb-16 lg:mb-24 max-w-4xl">
-           <div className="mb-6 flex items-center gap-3">
-              <span
-                  className="text-[10px] tracking-[0.4em] uppercase font-bold"
-                  style={{ color: '#8B6E4E' }}
+      <div className="mx-auto w-full max-w-[90rem] px-6 md:px-12 lg:px-16 xl:px-20 py-16 sm:py-20 lg:py-24">
+        <div className="grid gap-12 lg:grid-cols-12 lg:gap-16 xl:gap-20">
+          <header className="lg:col-span-4 lg:sticky lg:top-24 lg:self-start">
+            <p className="text-[11px] font-medium uppercase tracking-[0.28em] mb-6" style={{ fontFamily: fonts.body }}>
+              <span style={{ color: colors.secondaryText }}>[ </span>
+              <span style={{ color: colors.mainText }}>Why Choose Us</span>
+              <span style={{ color: colors.secondaryText }}> ]</span>
+            </p>
+
+            {showTitle && (
+              <h2
+                className="text-[clamp(1.75rem,3.2vw,2.75rem)] font-normal leading-[1.12] tracking-tight"
+                style={{ fontFamily: fonts.heading, color: colors.mainText }}
               >
-                  OUR VALUES
-              </span>
-              <div className="w-12 h-[1px] bg-[#8B6E4E]/30" />
-          </div>
+                {hasRichContent(section.title) ? (
+                  <TiptapRenderer content={section.title} as="inline" />
+                ) : (
+                  titleText
+                )}
+              </h2>
+            )}
 
-          {whyChooseUs.title && (
-            <h2
-              className="text-3xl lg:text-4xl font-serif leading-tight mb-6"
-              style={{ color: themeColors.lightPrimaryText }}
-            >
-              <TiptapRenderer content={whyChooseUs.title} />
-            </h2>
-          )}
+            {showDescription && hasRichContent(section.description) && (
+              <div
+                className={cn('mt-5 text-base sm:text-lg font-light leading-relaxed', !showTitle && 'mt-0')}
+                style={{ color: colors.secondaryText }}
+              >
+                <TiptapRenderer content={section.description} />
+              </div>
+            )}
 
-          {whyChooseUs.description && (
-            <div
-              className="text-base lg:text-lg font-light leading-relaxed max-w-2xl opacity-80"
-              style={{ color: themeColors.lightSecondaryText }}
+            {showDescription && !hasRichContent(section.description) && descriptionText && (
+              <p
+                className={cn('mt-5 text-base sm:text-lg font-light leading-relaxed', !showTitle && 'mt-0')}
+                style={{ color: colors.secondaryText }}
+              >
+                {descriptionText}
+              </p>
+            )}
+          </header>
+
+          {section.items.length > 0 && (
+            <ul
+              className="lg:col-span-8 grid gap-0 sm:grid-cols-2 sm:gap-x-10 lg:gap-x-12"
+              style={{ borderTop: `1px solid ${borderColor}` }}
             >
-              <TiptapRenderer content={whyChooseUs.description} />
-            </div>
+              {section.items.map((item, index) => {
+                const number = String(index + 1).padStart(2, '0');
+                const statInDescription = isStatValue(item.descriptionText);
+                const statInTitle = isStatValue(item.titleText);
+                const statText = statInDescription ? item.descriptionText : statInTitle ? item.titleText : '';
+                const stat = statText ? formatStatValue(statText) : null;
+                const labelText = statInDescription ? item.titleText : statInTitle ? item.descriptionText : item.titleText;
+                const bodyText =
+                  statInDescription || statInTitle
+                    ? ''
+                    : item.descriptionText;
+
+                return (
+                  <li
+                    key={`${item.titleText}-${index}`}
+                    className="py-7 sm:py-8 border-b"
+                    style={{ borderColor }}
+                  >
+                    {stat ? (
+                      <div>
+                        <p
+                          className="text-[clamp(2rem,4vw,2.75rem)] font-normal leading-none tracking-tight"
+                          style={{ fontFamily: fonts.heading, color: colors.mainText }}
+                        >
+                          {stat.value}
+                          {stat.suffix && (
+                            <span style={{ color: colors.primaryButton }}>{stat.suffix}</span>
+                          )}
+                        </p>
+                        {labelText && (
+                          <p
+                            className="mt-3 text-base sm:text-lg leading-snug"
+                            style={{ fontFamily: fonts.heading, color: colors.mainText }}
+                          >
+                            {hasRichContent(item.title) && !statInTitle ? (
+                              <TiptapRenderer content={item.title} as="inline" />
+                            ) : (
+                              labelText
+                            )}
+                          </p>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="flex gap-4 sm:gap-5">
+                        <span
+                          className="text-xs tabular-nums font-medium pt-1 shrink-0"
+                          style={{ color: colors.secondaryText, opacity: 0.55 }}
+                        >
+                          {number}
+                        </span>
+                        <div className="min-w-0">
+                          {item.titleText && (
+                            <h3
+                              className="text-base sm:text-lg leading-snug"
+                              style={{ fontFamily: fonts.heading, color: colors.mainText }}
+                            >
+                              {hasRichContent(item.title) ? (
+                                <TiptapRenderer content={item.title} as="inline" />
+                              ) : (
+                                item.titleText
+                              )}
+                            </h3>
+                          )}
+                          {bodyText && (
+                            <p
+                              className={cn('text-sm sm:text-base leading-relaxed', item.titleText && 'mt-2')}
+                              style={{ color: colors.secondaryText }}
+                            >
+                              {hasRichContent(item.description) ? (
+                                <TiptapRenderer content={item.description} as="inline" />
+                              ) : (
+                                bodyText
+                              )}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
           )}
         </div>
-
-        {/* Content Area - Minimalist List Layout */}
-        {items.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-16 gap-x-12">
-            {items.map((item: any, idx: number) => (
-              <div
-                key={idx}
-                className="group flex flex-col space-y-6"
-              >
-                {/* Numbering Detail */}
-                <div 
-                  className="text-sm font-bold tracking-tighter opacity-30 group-hover:opacity-100 transition-opacity"
-                  style={{ color: '#8B6E4E' }}
-                >
-                  {(idx + 1).toString().padStart(2, '0')}
-                </div>
-
-                {item?.title && (
-                  <h3
-                    className="text-xl font-serif"
-                    style={{ color: themeColors.lightPrimaryText }}
-                  >
-                    <TiptapRenderer content={item.title} />
-                  </h3>
-                )}
-
-                <div className="w-full h-[1px] bg-black/5" />
-
-                {item?.description && (
-                  <div
-                    className="text-sm leading-relaxed opacity-70 font-light"
-                    style={{ color: themeColors.lightSecondaryText }}
-                  >
-                    <TiptapRenderer content={item.description} />
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
       </div>
     </section>
   );
 };
+
+export default WhyChooseUs;

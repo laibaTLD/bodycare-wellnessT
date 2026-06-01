@@ -4,7 +4,7 @@ import React, { useEffect, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import { Page } from '@/app/lib/types';
 import { TiptapRenderer } from '@/app/components/ui/TiptapRenderer';
-import { OptimizedImage } from '@/app/components/ui/OptimizedImage';
+import { OptimizedImage, IMAGE_QUALITY_HIGH, IMAGE_SIZES } from '@/app/components/ui/OptimizedImage';
 import { getImageSrc, cn, TIPTAP_INHERIT } from '@/app/lib/utils';
 import { useThemeColors, useThemeFonts, useSectionContrast } from '@/app/hooks/useTheme';
 import { usePrefersReducedMotion } from '@/app/hooks/usePrefersReducedMotion';
@@ -116,7 +116,8 @@ export const CTA2Section: React.FC<CTA2SectionProps> = ({ cta2Section, className
               src={backgroundImageUrl}
               alt=""
               fill
-              sizes="100vw"
+              quality={IMAGE_QUALITY_HIGH}
+              sizes={IMAGE_SIZES.fullWidth}
               className="object-cover"
             />
           </div>

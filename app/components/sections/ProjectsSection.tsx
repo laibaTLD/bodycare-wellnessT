@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
+import { OptimizedImage, IMAGE_SIZES } from '@/app/components/ui/OptimizedImage';
 import type { Page, Project } from '@/app/lib/types';
 import { TiptapRenderer } from '@/app/components/ui/TiptapRenderer';
 import { cn, getImageSrc } from '@/app/lib/utils';
@@ -217,9 +217,10 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
               <div
                 ref={descRef}
                 className={cn(
-                  `mx-auto max-w-3xl text-lg leading-relaxed transition-all duration-1000 delay-300`,
+                  'mx-auto max-w-3xl text-lg leading-relaxed wb-text-on-light-secondary transition-all duration-1000 delay-300',
                   descVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
                 )}
+                style={{ color: colors.secondaryText, fontFamily: fonts.body }}
               >
                 <TiptapRenderer content={descriptionContent} as="inline" />
               </div>
@@ -253,12 +254,12 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
                 <article className="group relative flex h-full flex-col overflow-hidden rounded-3xl border bg-white/90 backdrop-blur-sm shadow-lg transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl" style={styles.card}>
                   <div className="relative aspect-[4/3] w-full shrink-0 overflow-hidden" style={styles.imagePlaceholder}>
                     {imageUrl ? (
-                      <Image
+                      <OptimizedImage
                         src={imageUrl}
                         alt={typeof title === 'string' ? title : 'Project'}
                         fill
+                        sizes={IMAGE_SIZES.gridThird}
                         className="object-cover transition-transform duration-700 group-hover:scale-110"
-                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                       />
                     ) : (
                       <div className="flex h-full items-center justify-center" style={{ color: `color-mix(in srgb, ${colors.primaryButton} 40%, transparent)` }}>

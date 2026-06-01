@@ -1,6 +1,6 @@
 'use client';
 
-import Image from 'next/image';
+import { OptimizedImage, IMAGE_SIZES } from '@/app/components/ui/OptimizedImage';
 import Link from 'next/link';
 import { useMemo } from 'react';
 import type { Page, Service } from '@/app/lib/types';
@@ -88,13 +88,12 @@ function ServiceCard({
         style={theme.styles.card}
       >
         <div className="relative aspect-[4/3] shrink-0 overflow-hidden">
-          <Image
+          <OptimizedImage
             src={service.imageUrl}
             alt={service.imageAlt}
             fill
+            sizes={IMAGE_SIZES.card}
             className="object-cover group-hover:scale-110 transition-transform duration-700"
-            loading="lazy"
-            sizes="(max-width: 768px) 300px, 350px"
           />
           <div className="absolute inset-0 transition-all duration-500" style={theme.styles.imageOverlay} />
           {service.price && (

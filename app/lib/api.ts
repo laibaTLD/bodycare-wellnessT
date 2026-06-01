@@ -92,14 +92,14 @@ export const testimonialApi = {
 
 // Service Area Pages API
 export const serviceAreaApi = {
-  getServiceAreaPagesBySite: async (siteSlug: string): Promise<any[]> => {
-    // Try both endpoint patterns for compatibility
+  getServiceAreaPagesBySite: async (siteSlug: string, options?: ApiGetOptions): Promise<any[]> => {
     try {
-      const response = await api.get(`/public/sites/${siteSlug}/service-area-pages`);
+      const response = await api.get(`/public/sites/${siteSlug}/service-area-pages`, options);
       return response.data?.data ?? response.data ?? [];
     } catch (err) {
-      // Fallback to empty array if endpoint doesn't exist
-      console.warn('Service area pages endpoint not available');
+      if (!options?.silent) {
+        console.warn('Service area pages endpoint not available');
+      }
       return [];
     }
   },

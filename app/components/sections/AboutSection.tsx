@@ -1,6 +1,6 @@
 'use client';
 
-import Image from 'next/image';
+import { OptimizedImage, IMAGE_SIZES } from '@/app/components/ui/OptimizedImage';
 import Link from 'next/link';
 import { useMemo } from 'react';
 import type { Page } from '@/app/lib/types';
@@ -161,13 +161,13 @@ export function AboutSection({ aboutSection, page, className }: AboutSectionProp
           >
             {image ? (
               <div className="relative group">
-                <div className="aspect-[4/5] rounded-3xl overflow-hidden shadow-2xl hover:shadow-3xl transition-all duration-500 hover:scale-105">
-                  <Image
+                <div className="relative aspect-[4/5] rounded-3xl overflow-hidden shadow-2xl hover:shadow-3xl transition-all duration-500 hover:scale-105">
+                  <OptimizedImage
                     src={image}
                     alt={imageAlt}
-                    width={400}
-                    height={500}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                    fill
+                    sizes={IMAGE_SIZES.portrait}
+                    className="object-cover group-hover:scale-110 transition-transform duration-700"
                   />
                   <div className="absolute inset-0" style={theme.styles.imageOverlay} />
                   <div

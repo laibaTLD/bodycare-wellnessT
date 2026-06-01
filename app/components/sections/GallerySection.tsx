@@ -1,9 +1,10 @@
 'use client';
 
-import Image from 'next/image';
-import { useEffect, useMemo, useState } from 'react';
+import { OptimizedImage, IMAGE_QUALITY_HIGH, IMAGE_SIZES } from '@/app/components/ui/OptimizedImage';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { Page } from '@/app/lib/types';
-import { useScrollAnimation } from '@/app/hooks/useScrollAnimation';
+import { TiptapRenderer } from '@/app/components/ui/TiptapRenderer';
+import { useScrollAnimation, useStaggeredAnimation } from '@/app/hooks/useScrollAnimation';
 import { useSectionTheme } from '@/app/hooks/useSectionTheme';
 import { cn, getImageSrc } from '@/app/lib/utils';
 import { tiptapToText } from '@/app/lib/seo';
@@ -20,7 +21,7 @@ const FALLBACK_GALLERY_IMAGES: GalleryImage[] = [
     id: 'fallback-1',
     title: 'Morning Meditation',
     altText: 'Person meditating at sunrise',
-    imageUrl: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=800',
+    imageUrl: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=1200',
   },
   {
     id: 'fallback-2',
@@ -38,7 +39,7 @@ const FALLBACK_GALLERY_IMAGES: GalleryImage[] = [
     id: 'fallback-4',
     title: 'Mindful Breathing',
     altText: 'Person practicing breathing exercises',
-    imageUrl: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=800',
+    imageUrl: 'https://images.unsplash.com/photo-1515377909023-d2a60a1b8a26?w=800',
   },
   {
     id: 'fallback-5',
@@ -51,6 +52,12 @@ const FALLBACK_GALLERY_IMAGES: GalleryImage[] = [
 interface GallerySectionProps {
   gallerySection?: Page['gallerySection'];
   className?: string;
+}
+
+function hasTiptapContent(content: unknown): boolean {
+  if (content == null || content === '') return false;
+  if (typeof content === 'object') return Boolean(tiptapToText(content));
+  return Boolean(String(content).trim());
 }
 
 function normalizeGalleryImages(gallerySection?: Page['gallerySection']): GalleryImage[] {
@@ -70,273 +77,370 @@ function normalizeGalleryImages(gallerySection?: Page['gallerySection']): Galler
   return cmsImages.length > 0 ? cmsImages : FALLBACK_GALLERY_IMAGES;
 }
 
+function getTileLayoutClass(index: number, total: number): string {
+  if (total === 1) {
+    return 'sm:col-span-2 lg:col-span-3';
+  }
+  if (total >= 3 && index === 0) {
+    return 'sm:col-span-2 lg:col-span-2 lg:row-span-2';
+  }
+  return '';
+}
+
+interface GalleryTileProps {
+  image: GalleryImage;
+  index: number;
+  total: number;
+  visible: boolean;
+  onOpen: (image: GalleryImage) => void;
+}
+
+function GalleryTile({ image, index, total, visible, onOpen }: GalleryTileProps) {
+  const theme = useSectionTheme();
+  const { colors, fonts, styles } = theme;
+  const isFeatured = total >= 3 && index === 0;
+  const isSingle = total === 1;
+
+  return (
+    <button
+      type="button"
+      onClick={() => onOpen(image)}
+      className={cn(
+        'group relative block w-full overflow-hidden rounded-2xl text-left lg:rounded-3xl',
+        'transition-all duration-500 ease-out',
+        'hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
+        getTileLayoutClass(index, total),
+        isFeatured
+          ? 'min-h-[340px] sm:min-h-[440px] lg:min-h-0 lg:h-full'
+          : isSingle
+            ? 'min-h-[360px] sm:min-h-[480px] lg:min-h-[560px]'
+            : 'min-h-[200px] sm:min-h-[220px] lg:min-h-0 lg:h-full lg:min-h-[240px]',
+        visible ? 'opacity-100 scale-100' : 'opacity-0 scale-[0.97]'
+      )}
+      style={{ transitionDelay: `${index * 80}ms` }}
+      aria-label={`View ${image.title}`}
+    >
+      <OptimizedImage
+        src={image.imageUrl}
+        alt={image.altText}
+        fill
+        sizes={
+          isFeatured || isSingle ? IMAGE_SIZES.sectionWide : IMAGE_SIZES.galleryTile
+        }
+        className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+      />
+      <div
+        className="absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100 group-focus-visible:opacity-100"
+        style={styles.imageOverlay}
+      />
+      <div className="absolute inset-x-0 bottom-0 translate-y-2 p-4 opacity-0 transition-all duration-500 group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:opacity-100 sm:p-5">
+        <span
+          className="mb-2 inline-block rounded-full px-3 py-1 text-[10px] font-medium uppercase tracking-widest backdrop-blur-sm"
+          style={{
+            backgroundColor: 'color-mix(in srgb, var(--wb-card-bg-light) 85%, transparent)',
+            color: colors.mainText,
+            fontFamily: fonts.body,
+          }}
+        >
+          {String(index + 1).padStart(2, '0')}
+        </span>
+        <p
+          className="text-sm font-semibold text-white drop-shadow-md sm:text-base"
+          style={{ fontFamily: fonts.heading }}
+        >
+          {image.title}
+        </p>
+      </div>
+      <div
+        className="absolute top-3 right-3 flex h-9 w-9 items-center justify-center rounded-full opacity-0 backdrop-blur-md transition-all duration-300 group-hover:opacity-100"
+        style={{ backgroundColor: 'color-mix(in srgb, var(--wb-card-bg-light) 90%, transparent)' }}
+        aria-hidden
+      >
+        <svg className="h-4 w-4" style={{ color: colors.primaryButton }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+        </svg>
+      </div>
+    </button>
+  );
+}
+
+function GalleryLightbox({
+  image,
+  onClose,
+  onPrev,
+  onNext,
+  hasPrev,
+  hasNext,
+}: {
+  image: GalleryImage;
+  onClose: () => void;
+  onPrev: () => void;
+  onNext: () => void;
+  hasPrev: boolean;
+  hasNext: boolean;
+}) {
+  const theme = useSectionTheme();
+  const { colors, fonts } = theme;
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+      if (e.key === 'ArrowLeft' && hasPrev) onPrev();
+      if (e.key === 'ArrowRight' && hasNext) onNext();
+    };
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', onKey);
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [onClose, onPrev, onNext, hasPrev, hasNext]);
+
+  return (
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-8"
+      role="dialog"
+      aria-modal="true"
+      aria-label={image.title}
+    >
+      <button
+        type="button"
+        className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+        onClick={onClose}
+        aria-label="Close gallery"
+      />
+      <div className="relative z-10 flex w-full max-w-5xl flex-col">
+        <div className="relative aspect-[4/3] min-h-[50vh] w-full max-h-[85vh] overflow-hidden rounded-2xl shadow-2xl sm:aspect-[16/10] sm:rounded-3xl">
+          <OptimizedImage
+            src={image.imageUrl}
+            alt={image.altText}
+            fill
+            quality={IMAGE_QUALITY_HIGH}
+            className="object-contain p-4"
+            sizes={IMAGE_SIZES.fullWidth}
+            priority
+          />
+        </div>
+        <div
+          className="mt-4 flex items-center justify-between gap-4 rounded-2xl px-5 py-4 backdrop-blur-md"
+          style={{
+            backgroundColor: 'color-mix(in srgb, var(--wb-card-bg-light) 95%, transparent)',
+          }}
+        >
+          <p className="text-lg font-semibold sm:text-xl" style={{ fontFamily: fonts.heading, color: colors.mainText }}>
+            {image.title}
+          </p>
+          <div className="flex shrink-0 items-center gap-2">
+            {hasPrev && (
+              <button
+                type="button"
+                onClick={onPrev}
+                className="flex h-10 w-10 items-center justify-center rounded-full transition-opacity hover:opacity-80"
+                style={{ backgroundColor: colors.primaryButton, color: 'var(--wb-text-on-dark, #fff)' }}
+                aria-label="Previous image"
+              >
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+            )}
+            {hasNext && (
+              <button
+                type="button"
+                onClick={onNext}
+                className="flex h-10 w-10 items-center justify-center rounded-full transition-opacity hover:opacity-80"
+                style={{ backgroundColor: colors.primaryButton, color: 'var(--wb-text-on-dark, #fff)' }}
+                aria-label="Next image"
+              >
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex h-10 w-10 items-center justify-center rounded-full border transition-colors hover:opacity-80"
+              style={{ borderColor: 'color-mix(in srgb, var(--wb-primary) 30%, transparent)', color: colors.mainText }}
+              aria-label="Close"
+            >
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function GallerySection({ gallerySection, className }: GallerySectionProps) {
   const theme = useSectionTheme();
   const { colors, fonts, styles } = theme;
 
-  const title = useMemo(() => tiptapToText(gallerySection?.title), [gallerySection?.title]);
-  const description = useMemo(
-    () => tiptapToText(gallerySection?.description),
-    [gallerySection?.description]
-  );
+  const titleContent = gallerySection?.title;
+  const descriptionContent = gallerySection?.description;
+  const hasTitle = hasTiptapContent(titleContent);
+  const hasDescription = hasTiptapContent(descriptionContent);
+
   const galleryImages = useMemo(() => normalizeGalleryImages(gallerySection), [gallerySection]);
 
-  const [selectedImage, setSelectedImage] = useState<GalleryImage>(galleryImages[0]);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   const { ref: titleRef, isVisible: titleVisible } =
-    useScrollAnimation<HTMLHeadingElement>({ threshold: 0.3 });
-  const { ref: descriptionRef, isVisible: descriptionVisible } =
-    useScrollAnimation<HTMLParagraphElement>({ threshold: 0.3 });
-  const { ref: galleryRef, isVisible: galleryVisible } =
+    useScrollAnimation<HTMLHeadingElement>({ threshold: 0.2 });
+  const { ref: descRef, isVisible: descVisible } =
     useScrollAnimation<HTMLDivElement>({ threshold: 0.2 });
+  const { ref: gridRef, visibleItems } = useStaggeredAnimation(galleryImages.length, 90);
 
-  useEffect(() => {
-    if (galleryImages.length > 0) {
-      setSelectedImage(galleryImages[0]);
-    }
+  const openLightbox = useCallback((image: GalleryImage) => {
+    const idx = galleryImages.findIndex((i) => i.id === image.id);
+    setLightboxIndex(idx >= 0 ? idx : 0);
   }, [galleryImages]);
+
+  const closeLightbox = useCallback(() => setLightboxIndex(null), []);
+
+  const lightboxImage = lightboxIndex != null ? galleryImages[lightboxIndex] : null;
 
   if (!gallerySection || gallerySection.enabled === false) return null;
 
   const hasCmsImages = (gallerySection.images?.filter((img) => img?.url?.trim()).length ?? 0) > 0;
-  if (!title && !description && !hasCmsImages) return null;
-
-  const accentBorder = { borderColor: colors.primaryButton };
-  const accentBorderMuted = {
-    borderColor: 'color-mix(in srgb, var(--wb-primary) 30%, transparent)',
-  };
+  if (!hasTitle && !hasDescription && !hasCmsImages) return null;
 
   return (
     <section
       id="gallery"
-      className={cn('py-20 lg:py-32 relative overflow-hidden', className)}
+      className={cn('relative overflow-hidden py-20 lg:py-32', className)}
       style={{ fontFamily: fonts.body }}
     >
-      <div className="absolute inset-0 animate-gradient-shift" style={styles.sectionGradientBg} />
+      <div className="absolute inset-0" style={styles.sectionGradientBgSoft} />
 
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {[
-          ['48.04%', '22.77%', '0s', '5s'],
-          ['61.51%', '75.31%', '0.7s', '5.5s'],
-          ['89.64%', '45.23%', '1.4s', '6s'],
-          ['33.01%', '43.08%', '2.1s', '6.5s'],
-          ['25.40%', '82.39%', '2.8s', '7s'],
-          ['46.07%', '12.54%', '3.5s', '7.5s'],
-          ['78.92%', '67.18%', '4.2s', '8s'],
-          ['12.35%', '55.67%', '4.9s', '8.5s'],
-          ['67.83%', '34.92%', '5.6s', '9s'],
-          ['5.19%', '91.45%', '6.3s', '9.5s'],
-        ].map(([left, top, delay, duration], i) => (
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        {[...Array(6)].map((_, i) => (
           <div
             key={i}
-            className="absolute w-1 h-1 rounded-full opacity-20 animate-float"
+            className="absolute h-1 w-1 rounded-full opacity-20 animate-float"
             style={{
               ...styles.floatingDot,
-              left,
-              top,
-              animationDelay: delay,
-              animationDuration: duration,
+              left: `${12 + i * 14}%`,
+              top: `${10 + i * 12}%`,
+              animationDelay: `${i * 0.6}s`,
             }}
           />
         ))}
       </div>
 
-      <div className="absolute top-10 right-10 w-32 h-32 opacity-10 animate-sway">
-        <svg viewBox="0 0 100 100" className="w-full h-full" style={{ color: colors.primaryButton }}>
-          <circle cx="50" cy="50" r="40" fill="none" stroke="currentColor" strokeWidth="1" className="animate-breathe" />
-          <circle cx="50" cy="50" r="30" fill="none" stroke="currentColor" strokeWidth="1" className="animate-breathe" style={{ animationDelay: '0.5s' }} />
-          <circle cx="50" cy="50" r="20" fill="currentColor" opacity="0.3" />
-        </svg>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-        <div className="text-center mb-16">
-          {title && (
-            <h2
-              ref={titleRef}
+      <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        {(hasTitle || hasDescription) && (
+          <div className="mb-12 text-center lg:mb-16">
+            <div
               className={cn(
-                'text-4xl md:text-5xl lg:text-6xl font-semibold mb-6 transition-all duration-1000',
-                titleVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+                'mx-auto mb-8 inline-flex h-16 w-16 items-center justify-center rounded-full shadow-lg transition-all duration-1000',
+                titleVisible ? 'scale-100 opacity-100' : 'scale-75 opacity-0'
               )}
-              style={{ fontFamily: fonts.heading, ...styles.titleGradient }}
+              style={styles.iconBadge}
             >
-              {title}
-            </h2>
-          )}
-          {description && (
-            <p
-              ref={descriptionRef}
-              className={cn(
-                'text-base md:text-lg max-w-2xl mx-auto leading-relaxed transition-all duration-1000 delay-300',
-                descriptionVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-              )}
-              style={{ color: colors.secondaryText }}
-            >
-              {description}
-            </p>
-          )}
-        </div>
-
-        <div ref={galleryRef} className="flex flex-col lg:flex-row items-start gap-8">
-          <div
-            className={cn(
-              'flex-1 relative group transition-all duration-1000',
-              galleryVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-            )}
-          >
-            <div className="relative rounded-3xl overflow-hidden shadow-2xl bg-white/50 backdrop-blur-sm p-2">
-              <div className="relative rounded-2xl overflow-hidden">
-                <Image
-                  src={selectedImage.imageUrl}
-                  alt={selectedImage.altText}
-                  width={800}
-                  height={500}
-                  className="w-full h-[500px] object-cover transition-transform duration-700 group-hover:scale-105"
-                  sizes="(max-width: 1024px) 100vw, 66vw"
+              <svg className="h-8 w-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
                 />
-                <div
-                  className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                  style={{
-                    background: `linear-gradient(to top, color-mix(in srgb, ${colors.mainText} 20%, transparent), transparent)`,
-                  }}
-                />
-                <div className="absolute bottom-0 left-0 right-0 p-8 transform translate-y-full group-hover:translate-y-0 transition-transform duration-500">
-                  <h3
-                    className="text-3xl font-semibold text-white drop-shadow-lg"
-                    style={{ fontFamily: fonts.heading }}
-                  >
-                    {selectedImage.title}
-                  </h3>
-                </div>
-              </div>
+              </svg>
             </div>
 
-            <div className="absolute -top-2 -left-2 w-8 h-8 border-t-2 border-l-2 opacity-50 group-hover:opacity-100 transition-opacity duration-500" style={accentBorder} />
-            <div className="absolute -top-2 -right-2 w-8 h-8 border-t-2 border-r-2 opacity-50 group-hover:opacity-100 transition-opacity duration-500" style={accentBorder} />
-            <div className="absolute -bottom-2 -left-2 w-8 h-8 border-b-2 border-l-2 opacity-50 group-hover:opacity-100 transition-opacity duration-500" style={accentBorder} />
-            <div className="absolute -bottom-2 -right-2 w-8 h-8 border-b-2 border-r-2 opacity-50 group-hover:opacity-100 transition-opacity duration-500" style={accentBorder} />
-          </div>
-
-          <div className="flex lg:flex-col gap-4 w-full lg:w-72">
-            {galleryImages.map((image, index) => (
-              <button
-                key={image.id}
-                type="button"
-                onClick={() => setSelectedImage(image)}
+            {hasTitle && (
+              <h2
+                ref={titleRef}
                 className={cn(
-                  'relative rounded-2xl overflow-hidden shadow-lg border-2 transition-all duration-500 group',
-                  selectedImage.id === image.id
-                    ? 'scale-105 shadow-2xl'
-                    : 'border-transparent hover:scale-105 hover:shadow-xl',
-                  galleryVisible ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-8'
+                  'mb-6 text-4xl font-semibold transition-all duration-1000 md:text-5xl lg:text-6xl',
+                  titleVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
                 )}
-                style={{
-                  transitionDelay: `${600 + index * 100}ms`,
-                  ...(selectedImage.id === image.id ? accentBorder : {}),
-                }}
+                style={{ fontFamily: fonts.heading, ...styles.titleGradient }}
               >
-                <div className="relative">
-                  <Image
-                    src={image.imageUrl}
-                    alt={image.altText}
-                    width={256}
-                    height={112}
-                    className="w-full h-28 object-cover transition-transform duration-500 group-hover:scale-110"
-                    sizes="256px"
-                  />
-                  <div
-                    className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                    style={{
-                      background: `linear-gradient(to top, color-mix(in srgb, ${colors.mainText} 80%, transparent), color-mix(in srgb, ${colors.mainText} 40%, transparent), transparent)`,
-                    }}
-                  />
-                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <p className="text-white text-sm font-medium px-4 text-center drop-shadow-lg">
-                      {image.title}
-                    </p>
-                  </div>
-                  {selectedImage.id === image.id && (
-                    <div
-                      className="absolute top-2 right-2 w-3 h-3 rounded-full animate-pulse shadow-lg"
-                      style={styles.dividerDot}
-                    />
-                  )}
-                </div>
-              </button>
-            ))}
+                <TiptapRenderer content={titleContent} as="inline" />
+              </h2>
+            )}
+
+            <div className="mb-6 flex items-center justify-center">
+              <div className="h-px w-16" style={styles.dividerLine} />
+              <div className="mx-6 h-4 w-4 animate-pulse rounded-full" style={styles.dividerDot} />
+              <div className="h-px w-16" style={styles.dividerLine} />
+            </div>
+
+            {hasDescription && (
+              <div
+                ref={descRef}
+                className={cn(
+                  'wb-text-on-light-secondary mx-auto max-w-2xl text-base leading-relaxed transition-all duration-1000 delay-300 md:text-lg',
+                  descVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
+                )}
+                style={{ color: colors.secondaryText, fontFamily: fonts.body }}
+              >
+                <TiptapRenderer content={descriptionContent} as="inline" />
+              </div>
+            )}
           </div>
+        )}
+
+        <div
+          ref={gridRef}
+          className={cn(
+            'grid gap-4 sm:gap-5 lg:gap-6',
+            galleryImages.length === 3
+              ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 lg:grid-rows-2 lg:min-h-[520px] lg:max-h-[720px]'
+              : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
+          )}
+        >
+          {galleryImages.map((image, index) => (
+            <GalleryTile
+              key={image.id}
+              image={image}
+              index={index}
+              total={galleryImages.length}
+              visible={visibleItems.includes(index)}
+              onOpen={openLightbox}
+            />
+          ))}
         </div>
 
-        <div className="mt-16 flex justify-center">
-          <div
-            className="w-32 h-1 rounded-full"
-            style={{
-              background: `linear-gradient(to right, transparent, color-mix(in srgb, ${colors.primaryButton} 30%, transparent), transparent)`,
-            }}
-          />
-        </div>
+        <p
+          className="mt-10 text-center text-xs uppercase tracking-widest"
+          style={{ color: colors.secondaryText, fontFamily: fonts.body }}
+        >
+          Tap any image to view full size
+        </p>
       </div>
+
+      {lightboxImage && lightboxIndex != null && (
+        <GalleryLightbox
+          image={lightboxImage}
+          onClose={closeLightbox}
+          onPrev={() => setLightboxIndex((i) => (i != null && i > 0 ? i - 1 : i))}
+          onNext={() =>
+            setLightboxIndex((i) =>
+              i != null && i < galleryImages.length - 1 ? i + 1 : i
+            )
+          }
+          hasPrev={lightboxIndex > 0}
+          hasNext={lightboxIndex < galleryImages.length - 1}
+        />
+      )}
 
       <style jsx>{`
         @keyframes float {
           0%,
           100% {
-            transform: translateY(0px) rotate(0deg);
+            transform: translateY(0);
           }
           50% {
-            transform: translateY(-20px) rotate(5deg);
+            transform: translateY(-12px);
           }
         }
-
-        @keyframes breathe {
-          0%,
-          100% {
-            transform: scale(1);
-            opacity: 0.3;
-          }
-          50% {
-            transform: scale(1.1);
-            opacity: 0.5;
-          }
-        }
-
-        @keyframes sway {
-          0%,
-          100% {
-            transform: rotate(-3deg);
-          }
-          50% {
-            transform: rotate(3deg);
-          }
-        }
-
-        @keyframes gradient-shift {
-          0% {
-            background-position: 0% 0%;
-          }
-          50% {
-            background-position: 100% 100%;
-          }
-          100% {
-            background-position: 0% 0%;
-          }
-        }
-
         .animate-float {
           animation: float 4s ease-in-out infinite;
-        }
-
-        .animate-breathe {
-          animation: breathe 3s ease-in-out infinite;
-        }
-
-        .animate-sway {
-          animation: sway 6s ease-in-out infinite;
-        }
-
-        .animate-gradient-shift {
-          background-size: 200% 200%;
-          animation: gradient-shift 8s ease infinite;
         }
       `}</style>
     </section>

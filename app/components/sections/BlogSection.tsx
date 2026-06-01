@@ -2,7 +2,7 @@
 
 import React, { useMemo } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
+import { OptimizedImage, IMAGE_SIZES } from '@/app/components/ui/OptimizedImage';
 import type { Page } from '@/app/lib/types';
 import { TiptapRenderer } from '@/app/components/ui/TiptapRenderer';
 import { getImageSrc, cn } from '@/app/lib/utils';
@@ -352,11 +352,11 @@ function FeaturedPostCard({
       <Link href={`/blog/${post.slug}`} className="block no-underline">
         <div className="relative aspect-[16/10] overflow-hidden bg-[#e8f0ea]">
           {imgSrc ? (
-            <Image
+            <OptimizedImage
               src={imgSrc}
               alt={getPostImageAlt(post)}
               fill
-              sizes="(max-width: 1024px) 100vw, 58vw"
+              sizes={IMAGE_SIZES.sectionHalf}
               className="object-cover transition-transform duration-700 group-hover:scale-110"
               priority
             />
@@ -411,11 +411,11 @@ function MorePostCard({ post, showDate }: { post: BlogPostItem; showDate: boolea
     >
       <div className="relative h-20 w-24 shrink-0 overflow-hidden rounded-2xl bg-[#e8f0ea] sm:h-24 sm:w-28">
         {imgSrc ? (
-          <Image
+          <OptimizedImage
             src={imgSrc}
             alt={getPostImageAlt(post)}
             fill
-            sizes="112px"
+            sizes={IMAGE_SIZES.thumb}
             className="object-cover transition-transform duration-500 group-hover:scale-110"
           />
         ) : (

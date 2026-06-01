@@ -9,7 +9,7 @@ import { Project } from '@/app/lib/types';
 import { Footer } from '@/app/components/layout/Footer';
 import { TiptapRenderer } from '@/app/components/ui/TiptapRenderer';
 import { getImageSrc } from '@/app/lib/utils';
-import { OptimizedImage } from '@/app/components/ui/OptimizedImage';
+import { OptimizedImage, IMAGE_QUALITY_HIGH, IMAGE_SIZES } from '@/app/components/ui/OptimizedImage';
 import { useThemeColors, useThemeFonts } from '@/app/hooks/useTheme';
 import { SeoHead } from '@/app/components/ui/SeoHead';
 import { normalizeSeoImage, tiptapToText, truncate } from '@/app/lib/seo';
@@ -76,7 +76,8 @@ export default function ProjectDetailPage() {
                 src={getImageSrc(project.featuredImage.url)}
                 alt={project.featuredImage.altText || project.title}
                 fill
-                sizes="100vw"
+                quality={IMAGE_QUALITY_HIGH}
+                sizes={IMAGE_SIZES.fullWidth}
                 priority
                 className="object-cover"
               />
@@ -149,7 +150,7 @@ export default function ProjectDetailPage() {
                           src={getImageSrc(img.url)}
                           alt={img.altText || project.title}
                           fill
-                          sizes="(max-width: 1024px) 100vw, 50vw"
+                          sizes={IMAGE_SIZES.sectionHalf}
                           className="object-cover hover:scale-105 transition-transform duration-700"
                         />
                       </div>

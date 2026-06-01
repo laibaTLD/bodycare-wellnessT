@@ -72,10 +72,9 @@ export default function HomeClient() {
     );
   }
 
-  const homePage = pages.find((p: Page) => p.pageType === 'home');
-  const displayPage = homePage;
+  const displayPage = pages.find((p: Page) => p.pageType === 'home');
 
-  if (!displayPage && !loading) {
+  if (!displayPage) {
     return (
       <div 
         className="min-h-screen flex flex-col items-center justify-center p-4"
@@ -133,7 +132,9 @@ export default function HomeClient() {
         <WhyChooseUsSection whyChooseUsSection={displayPage.whyChooseUsSection} />
         <FAQSection faqSection={displayPage.faqSection} />
         <TestimonialsSection testimonialsSection={displayPage.testimonialsSection} />
-        <ServingAreasSection servingAreasSection={displayPage.servingAreasSection} />
+        <ServingAreasSection
+          servingAreasSection={displayPage.servingAreasSection ?? { enabled: true }}
+        />
         <ContactSection contactSection={displayPage.contactSection} />
       </main>
       <Footer />

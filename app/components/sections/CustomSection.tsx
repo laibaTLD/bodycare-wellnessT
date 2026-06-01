@@ -4,7 +4,7 @@ import React from 'react';
 import { Page } from '@/app/lib/types';
 import { TiptapRenderer } from '@/app/components/ui/TiptapRenderer';
 import { getImageSrc, cn } from '@/app/lib/utils';
-import { OptimizedImage } from '@/app/components/ui/OptimizedImage';
+import { OptimizedImage, IMAGE_SIZES } from '@/app/components/ui/OptimizedImage';
 import { useThemeColors, useThemeFonts } from '@/app/hooks/useTheme';
 
 interface CustomSectionProps {
@@ -45,7 +45,7 @@ export const CustomSection: React.FC<CustomSectionProps> = ({ section, className
                                     alt={(image as any).altText || ''}
                                     width={900}
                                     height={600}
-                                    sizes="(max-width: 768px) 100vw, 33vw"
+                                    sizes={IMAGE_SIZES.gridThird}
                                     className="w-full h-auto rounded-lg shadow-lg"
                                 />
                             );

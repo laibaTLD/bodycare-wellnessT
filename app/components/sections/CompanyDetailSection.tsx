@@ -1,6 +1,6 @@
 'use client';
 
-import Image from 'next/image';
+import { OptimizedImage, IMAGE_SIZES } from '@/app/components/ui/OptimizedImage';
 import { useMemo } from 'react';
 import type { Page } from '@/app/lib/types';
 import {
@@ -194,13 +194,12 @@ export function CompanyDetailSection({
                         <div className="relative group">
                           <div className="relative overflow-hidden rounded-3xl shadow-2xl hover:shadow-3xl transition-all duration-700 hover:scale-105">
                             <div className="aspect-[16/10] relative">
-                              <Image
+                              <OptimizedImage
                                 src={section.imageUrl}
                                 alt={section.imageAlt}
                                 fill
+                                sizes={IMAGE_SIZES.sectionWide}
                                 className="object-cover group-hover:scale-110 transition-transform duration-700"
-                                loading="lazy"
-                                sizes="(max-width: 1024px) 100vw, 60vw"
                               />
                               <div
                                 className="absolute inset-0 bg-gradient-to-br from-transparent via-transparent transition-all duration-500"

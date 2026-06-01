@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { cn, getImageSrc } from '@/app/lib/utils';
-import { OptimizedImage } from '@/app/components/ui/OptimizedImage';
+import { OptimizedImage, IMAGE_SIZES } from '@/app/components/ui/OptimizedImage';
 import { TiptapContent, TiptapAnyNode, TiptapMark } from '@/app/lib/tiptap-types';
 
 interface TiptapRendererProps {
@@ -254,9 +254,9 @@ const renderNode = (node: any, key?: React.Key): React.ReactNode => {
         src={src}
         alt={alt}
         title={title}
-        width={1200}
-        height={800}
-        sizes="(max-width: 768px) 100vw, 800px"
+        width={1400}
+        height={933}
+        sizes={IMAGE_SIZES.sectionWide}
         className="max-w-full h-auto rounded-lg"
       />
     );

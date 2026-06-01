@@ -1,6 +1,6 @@
 'use client';
 
-import Image from 'next/image';
+import { OptimizedImage, IMAGE_QUALITY_HIGH, IMAGE_SIZES } from '@/app/components/ui/OptimizedImage';
 import Link from 'next/link';
 import { useMemo } from 'react';
 import type { Page } from '@/app/lib/types';
@@ -57,37 +57,37 @@ function HeroMeditationFigure() {
   const { colors } = theme;
 
   return (
-    <div
-      className="w-full h-full flex items-center justify-center relative overflow-hidden min-h-[12rem]"
-      style={{ backgroundColor: colors.sectionBackgroundLight }}
-    >
+    <div className="w-full h-full flex items-center justify-center relative overflow-hidden">
       <div className="w-32 h-40 bg-gradient-to-b from-[#f4d1c9] to-[#e8b5a8] rounded-full relative group-hover:animate-pulse">
-        <div
+        {/* Animated meditation person */}
+        <div 
           className="absolute top-8 left-1/2 transform -translate-x-1/2 w-16 h-16 rounded-full animate-breathe"
           style={{ backgroundColor: '#d49a8a' }}
         />
-        <div
+        <div 
           className="absolute top-20 left-1/2 transform -translate-x-1/2 w-20 h-24 rounded-t-full"
           style={{
             background: `linear-gradient(to bottom, color-mix(in srgb, ${colors.primaryButton} 90%, white), color-mix(in srgb, ${colors.primaryButton} 75%, black))`,
           }}
         />
-        <div
+        {/* Floating meditation aura */}
+        <div 
           className="absolute top-6 left-1/2 transform -translate-x-1/2 w-20 h-20 border-2 rounded-full opacity-30 animate-ping"
           style={{ borderColor: colors.primaryButton }}
         />
       </div>
-      <div
+      <div 
         className="absolute top-4 right-4 text-xs opacity-60 animate-bounce"
         style={{ color: colors.primaryButton, animationDelay: '1s' }}
       >
         Meditate
       </div>
-      <div
+      {/* Floating zen particles */}
+      <div 
         className="absolute top-12 left-8 w-2 h-2 rounded-full opacity-50 animate-float"
         style={{ backgroundColor: colors.primaryButton, animationDelay: '0.5s' }}
       />
-      <div
+      <div 
         className="absolute bottom-20 right-8 w-1 h-1 rounded-full opacity-40 animate-float"
         style={{ backgroundColor: colors.primaryButton, animationDelay: '1.5s' }}
       />
@@ -103,25 +103,27 @@ function HeroImagePlaceholder({ variant }: { variant: 'yoga' | 'relax' }) {
     return (
       <div className="w-full h-full flex items-center justify-center relative">
         <div className="w-24 h-32 relative group-hover:animate-bounce">
-          <div
+          {/* Animated yoga pose */}
+          <div 
             className="absolute top-4 left-1/2 transform -translate-x-1/2 w-10 h-10 rounded-full animate-pulse"
             style={{ backgroundColor: '#d49a8a' }}
           />
-          <div
+          <div 
             className="absolute top-12 left-1/2 transform -translate-x-1/2 w-12 h-16 rounded-t-lg"
             style={{
               background: `linear-gradient(to bottom, ${colors.mainText}, color-mix(in srgb, ${colors.mainText} 80%, black))`,
             }}
           />
-          <div
+          <div 
             className="absolute top-16 left-3 w-6 h-12 rounded-full transform rotate-45 group-hover:rotate-90 transition-transform duration-1000"
             style={{ backgroundColor: '#d49a8a' }}
           />
-          <div
+          <div 
             className="absolute top-16 right-3 w-6 h-12 rounded-full transform -rotate-45 group-hover:-rotate-90 transition-transform duration-1000"
             style={{ backgroundColor: '#d49a8a' }}
           />
-          <div
+          {/* Energy lines */}
+          <div 
             className="absolute inset-0 border rounded-full opacity-20 animate-spin"
             style={{ borderColor: colors.primaryButton, animationDuration: '8s' }}
           />
@@ -136,7 +138,8 @@ function HeroImagePlaceholder({ variant }: { variant: 'yoga' | 'relax' }) {
   return (
     <div className="w-full h-full flex items-center justify-center relative">
       <div className="w-20 h-24 relative">
-        <div
+        {/* Animated spa wellness illustration */}
+        <div 
           className="absolute top-2 left-1/2 transform -translate-x-1/2 w-16 h-16 rounded-full border-4 opacity-60 group-hover:animate-spin"
           style={{
             backgroundColor: colors.sectionBackgroundLight,
@@ -144,23 +147,25 @@ function HeroImagePlaceholder({ variant }: { variant: 'yoga' | 'relax' }) {
             animationDuration: '3s',
           }}
         />
-        <div
+        <div 
           className="absolute top-6 left-1/2 transform -translate-x-1/2 w-8 h-8 rounded-full animate-pulse"
           style={{ backgroundColor: colors.primaryButton }}
         />
-        <div
+        {/* Floating spa bubbles */}
+        <div 
           className="absolute bottom-2 left-2 w-3 h-3 rounded-full opacity-40 animate-bounce"
           style={{ backgroundColor: colors.primaryButton, animationDelay: '0.3s' }}
         />
-        <div
+        <div 
           className="absolute bottom-4 right-2 w-2 h-2 rounded-full opacity-60 animate-bounce"
           style={{ backgroundColor: colors.primaryButton, animationDelay: '0.7s' }}
         />
-        <div
+        <div 
           className="absolute bottom-6 left-1/2 transform -translate-x-1/2 w-1 h-1 rounded-full opacity-80 animate-bounce"
           style={{ backgroundColor: colors.primaryButton, animationDelay: '1.1s' }}
         />
-        <div
+        {/* Ripple effect */}
+        <div 
           className="absolute top-4 left-1/2 transform -translate-x-1/2 w-12 h-12 border-2 rounded-full opacity-20 animate-ping"
           style={{ borderColor: colors.primaryButton }}
         />
@@ -215,7 +220,7 @@ export function HeroSection({ hero, page, className }: HeroSectionProps) {
   };
 
   const ctaHoverOverlayStyle: React.CSSProperties = {
-    background: `linear-gradient(to right, ${colors.primaryButton}, ${colors.hoverActive})`,
+    background: `linear-gradient(to right, ${colors.primaryButton}, ${colors.hoverActive || colors.primaryButton})`,
   };
 
   const renderGalleryCell = (
@@ -235,12 +240,14 @@ export function HeroSection({ hero, page, className }: HeroSectionProps) {
           <HeroMeditationFigure />
         ) : image ? (
           <div className="relative w-full h-full min-h-[12rem]">
-            <Image
+            <OptimizedImage
               src={image.url}
               alt={image.alt}
               fill
+              quality={IMAGE_QUALITY_HIGH}
+              sizes={IMAGE_SIZES.heroCell}
               className="object-cover"
-              sizes="(max-width: 1024px) 50vw, 33vw"
+              priority={index === 1}
             />
           </div>
         ) : (
@@ -255,18 +262,20 @@ export function HeroSection({ hero, page, className }: HeroSectionProps) {
 
   return (
     <section
-      className={cn('relative pt-4 pb-12 lg:pt-6 lg:pb-20 overflow-hidden', className)}
+      className={cn('relative pt-2 pb-4 lg:pt-6 lg:pb-8 overflow-hidden', className)}
       style={{ fontFamily: fonts.body }}
     >
+      {/* Animated Background gradient driven by site engine state styles */}
       <div className="absolute inset-0 animate-gradient-shift" style={styles.sectionGradientBg} />
 
+      {/* Floating particles inside client sandbox layout bounds */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {[...Array(6)].map((_, i) => (
           <div
             key={i}
             className="absolute w-2 h-2 rounded-full opacity-20 animate-float"
             style={{
-              ...styles.floatingDot,
+              backgroundColor: colors.primaryButton,
               left: `${15 + i * 12}%`,
               top: `${20 + i * 10}%`,
               animationDelay: `${i * 0.8}s`,
@@ -278,6 +287,8 @@ export function HeroSection({ hero, page, className }: HeroSectionProps) {
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-start justify-center min-h-[85vh]">
         <div className="w-full grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+          
+          {/* Left Column - Dynamic Builder Content Engine */}
           <div className="space-y-8">
             <h1
               ref={titleRef}
@@ -285,7 +296,13 @@ export function HeroSection({ hero, page, className }: HeroSectionProps) {
                 'text-5xl md:text-6xl lg:text-7xl xl:text-7xl font-bold leading-[1.1] transition-all duration-1000 hover:scale-105 cursor-default',
                 titleVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
               )}
-              style={{ fontFamily: fonts.heading, ...styles.titleGradient }}
+              style={{ 
+                fontFamily: fonts.heading, 
+                background: `linear-gradient(135deg, ${colors.mainText} 0%, ${colors.primaryButton} 100%)`,
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text'
+              }}
             >
               {title}
             </h1>
@@ -336,7 +353,9 @@ export function HeroSection({ hero, page, className }: HeroSectionProps) {
               ))}
           </div>
 
+          {/* Right Column - Premium Graphic Matrix Shell */}
           <div className="relative" ref={imageGridRef}>
+            {/* Animated decorative plant elements */}
             <div
               className={cn(
                 'absolute -top-10 -right-10 w-32 h-32 opacity-30 transition-all duration-1000',
@@ -353,6 +372,7 @@ export function HeroSection({ hero, page, className }: HeroSectionProps) {
               </svg>
             </div>
 
+            {/* Bottom left plant with breathing animation */}
             <div
               className={cn(
                 'absolute -bottom-5 -left-5 w-24 h-24 opacity-40 transition-all duration-1000',
@@ -366,6 +386,7 @@ export function HeroSection({ hero, page, className }: HeroSectionProps) {
               </svg>
             </div>
 
+            {/* Image Grid with structural assignments */}
             <div className="grid grid-cols-2 gap-4 h-[500px]">
               {renderGalleryCell(
                 0,
@@ -379,7 +400,7 @@ export function HeroSection({ hero, page, className }: HeroSectionProps) {
               {renderGalleryCell(
                 1,
                 'yoga',
-                gridCellBase,
+                cn(gridCellBase, 'hover:rotate-1'),
                 '400ms',
                 {
                   background: `linear-gradient(to bottom right, ${colors.pageBackground}, ${colors.sectionBackgroundLight})`,
@@ -388,7 +409,7 @@ export function HeroSection({ hero, page, className }: HeroSectionProps) {
               {renderGalleryCell(
                 2,
                 'relax',
-                gridCellBase,
+                cn(gridCellBase, 'hover:-rotate-1'),
                 '600ms',
                 {
                   background: `linear-gradient(to bottom right, ${colors.pageBackground}, color-mix(in srgb, ${colors.sectionBackgroundLight} 80%, ${colors.pageBackground}))`,
@@ -396,76 +417,37 @@ export function HeroSection({ hero, page, className }: HeroSectionProps) {
               )}
             </div>
 
-            <div className="absolute top-1/3 -right-6 w-4 h-4 rounded-full opacity-30 animate-float" style={{ ...styles.floatingDot, animationDelay: '0s', animationDuration: '3s' }} />
-            <div className="absolute bottom-1/3 -left-3 w-3 h-3 rounded-full opacity-40 animate-float" style={{ ...styles.floatingDot, animationDelay: '1s', animationDuration: '4s' }} />
-            <div className="absolute top-1/4 left-1/4 w-2 h-2 rounded-full opacity-50 animate-float" style={{ ...styles.floatingDot, animationDelay: '2s', animationDuration: '5s' }} />
-            <div className="absolute bottom-1/4 right-1/3 w-1 h-1 rounded-full opacity-60 animate-pulse" style={styles.floatingDot} />
+            {/* Enhanced floating decorative theme indicators */}
+            <div className="absolute top-1/3 -right-6 w-4 h-4 rounded-full opacity-30 animate-float" style={{ backgroundColor: colors.primaryButton, animationDelay: '0s', animationDuration: '3s' }} />
+            <div className="absolute bottom-1/3 -left-3 w-3 h-3 rounded-full opacity-40 animate-float" style={{ backgroundColor: colors.primaryButton, animationDelay: '1s', animationDuration: '4s' }} />
+            <div className="absolute top-1/4 left-1/4 w-2 h-2 rounded-full opacity-50 animate-float" style={{ backgroundColor: colors.primaryButton, animationDelay: '2s', animationDuration: '5s' }} />
           </div>
         </div>
       </div>
 
       <style jsx>{`
         @keyframes float {
-          0%,
-          100% {
-            transform: translateY(0px) rotate(0deg);
-          }
-          50% {
-            transform: translateY(-20px) rotate(5deg);
-          }
+          0%, 100% { transform: translateY(0px) rotate(0deg); }
+          50% { transform: translateY(-20px) rotate(5deg); }
         }
-
         @keyframes breathe {
-          0%,
-          100% {
-            transform: scale(1);
-          }
-          50% {
-            transform: scale(1.1);
-          }
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.1); }
         }
-
         @keyframes sway {
-          0%,
-          100% {
-            transform: rotate(0deg);
-          }
-          25% {
-            transform: rotate(5deg);
-          }
-          75% {
-            transform: rotate(-5deg);
-          }
+          0%, 100% { transform: rotate(0deg); }
+          25% { transform: rotate(5deg); }
+          75% { transform: rotate(-5deg); }
         }
-
         @keyframes gradient-shift {
-          0% {
-            background-position: 0% 0%;
-          }
-          50% {
-            background-position: 100% 100%;
-          }
-          100% {
-            background-position: 0% 0%;
-          }
+          0% { background-position: 0% 0%; }
+          50% { background-position: 100% 100%; }
+          100% { background-position: 0% 0%; }
         }
-
-        .animate-float {
-          animation: float 4s ease-in-out infinite;
-        }
-
-        .animate-breathe {
-          animation: breathe 3s ease-in-out infinite;
-        }
-
-        .animate-sway {
-          animation: sway 6s ease-in-out infinite;
-        }
-
-        .animate-gradient-shift {
-          background-size: 200% 200%;
-          animation: gradient-shift 8s ease infinite;
-        }
+        .animate-float { animation: float 4s ease-in-out infinite; }
+        .animate-breathe { animation: breathe 3s ease-in-out infinite; }
+        .animate-sway { animation: sway 6s ease-in-out infinite; }
+        .animate-gradient-shift { background-size: 200% 200%; animation: gradient-shift 8s ease infinite; }
       `}</style>
     </section>
   );

@@ -1,6 +1,6 @@
 'use client';
 
-import Image from 'next/image';
+import { OptimizedImage, IMAGE_QUALITY_HIGH, IMAGE_SIZES } from '@/app/components/ui/OptimizedImage';
 import Link from 'next/link';
 import { useMemo } from 'react';
 import type { Page } from '@/app/lib/types';
@@ -128,7 +128,15 @@ export function CTASection({ ctaSection, className }: CTASectionProps) {
       />
 
       <div className="absolute inset-0 opacity-120">
-        <Image src={ctaImage} alt="CTA background" fill className="object-cover" quality={85} sizes="100vw" />
+        <OptimizedImage
+          src={ctaImage}
+          alt="CTA background"
+          fill
+          quality={IMAGE_QUALITY_HIGH}
+          sizes={IMAGE_SIZES.fullWidth}
+          className="object-cover"
+          priority
+        />
       </div>
 
       <div

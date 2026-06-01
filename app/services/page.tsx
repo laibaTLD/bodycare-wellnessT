@@ -59,11 +59,9 @@ export default function ServicesPage() {
     );
   }
 
-  // Find services page
-  const servicesPage = pages.find((p: Page) => p.pageType === 'service-list');
-  const displayPage = servicesPage;
+  const displayPage = pages.find((p: Page) => p.pageType === 'service-list');
 
-  if (!displayPage && !loading) {
+  if (!displayPage) {
     return (
       <div 
         className="min-h-screen flex flex-col items-center justify-center p-4"

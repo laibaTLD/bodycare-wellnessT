@@ -183,18 +183,25 @@ export const WebBuilderProvider: React.FC<WebBuilderProviderProps> = ({ children
     loadSite(SITE_SLUG);
   }, []);
 
-  // Optional: poll site for theme edits from builder (disabled in production by default — see rate limits)
+  // Poll site for builder edits (theme, service areas, business info, etc.)
   useEffect(() => {
     if (!site?.slug || SITE_POLL_INTERVAL_MS <= 0) return;
+
+    const siteFingerprint = (s: Site) =>
+      JSON.stringify({
+        theme: s.theme,
+        serviceAreas: s.serviceAreas,
+        business: s.business,
+        footer: s.footer,
+        socialLinks: s.socialLinks,
+      });
 
     const intervalId = setInterval(async () => {
       try {
         const siteData = await siteApi.getSiteBySlug(site.slug, { silent: true });
         setSite((prevSite) => {
-          if (prevSite && JSON.stringify(prevSite.theme) !== JSON.stringify(siteData.theme)) {
-            return siteData;
-          }
-          return prevSite;
+          if (!prevSite) return siteData;
+          return siteFingerprint(prevSite) !== siteFingerprint(siteData) ? siteData : prevSite;
         });
       } catch {
         /* ignore polling errors */
@@ -250,6 +257,23 @@ export const WebBuilderProvider: React.FC<WebBuilderProviderProps> = ({ children
           JSON.stringify(prevServices) !== JSON.stringify(servicesData)
             ? servicesData
             : prevServices
+        );
+      } catch {
+        /* ignore */
+      }
+    }, CONTENT_POLL_INTERVAL_MS);
+
+    return () => clearInterval(intervalId);
+  }, [site?.slug]);
+
+  useEffect(() => {
+    if (!site?.slug || CONTENT_POLL_INTERVAL_MS <= 0) return;
+
+    const intervalId = setInterval(async () => {
+      try {
+        const data = await serviceAreaApi.getServiceAreaPagesBySite(site.slug, { silent: true });
+        setServiceAreaPages((prev) =>
+          JSON.stringify(prev) !== JSON.stringify(data) ? data : prev
         );
       } catch {
         /* ignore */

@@ -1,5 +1,6 @@
 import NextImage, { type ImageProps } from 'next/image';
 import { forwardRef } from 'react';
+import { IMAGE_QUALITY, IMAGE_SIZES } from '@/app/lib/imageDefaults';
 import { cn } from '@/app/lib/utils';
 
 export type OptimizedImageProps = Omit<ImageProps, 'src'> & {
@@ -14,8 +15,7 @@ function useNativeImgElement(src: string, unoptimized?: boolean): boolean {
 }
 
 /**
- * Wrapper around next/image so CMS URLs get WebP (see next.config `images.formats`).
- * SVG, data URLs, and `unoptimized` fall back to a plain &lt;img&gt;.
+ * Wrapper around next/image: WebP/AVIF, default quality 90, sensible size hints for CMS URLs.
  */
 export const OptimizedImage = forwardRef<HTMLImageElement | null, OptimizedImageProps>(
   function OptimizedImage(
@@ -28,6 +28,7 @@ export const OptimizedImage = forwardRef<HTMLImageElement | null, OptimizedImage
       height,
       sizes,
       style,
+      quality = IMAGE_QUALITY,
       unoptimized,
       ...rest
     },
@@ -48,7 +49,6 @@ export const OptimizedImage = forwardRef<HTMLImageElement | null, OptimizedImage
       );
     }
 
-    /* next/image ignores HTML `loading`; use `priority` for LCP images */
     const { loading: _omitLoading, ...imageRest } = rest;
     void _omitLoading;
 
@@ -59,7 +59,8 @@ export const OptimizedImage = forwardRef<HTMLImageElement | null, OptimizedImage
           src={src}
           alt={alt}
           fill
-          sizes={sizes ?? '100vw'}
+          quality={quality}
+          sizes={sizes ?? IMAGE_SIZES.sectionWide}
           className={cn('object-cover', className)}
           style={style}
           {...imageRest}
@@ -77,7 +78,8 @@ export const OptimizedImage = forwardRef<HTMLImageElement | null, OptimizedImage
         alt={alt}
         width={w}
         height={h}
-        sizes={sizes}
+        quality={quality}
+        sizes={sizes ?? IMAGE_SIZES.content}
         className={cn('h-auto max-w-full', className)}
         style={style}
         {...imageRest}
@@ -85,3 +87,5 @@ export const OptimizedImage = forwardRef<HTMLImageElement | null, OptimizedImage
     );
   }
 );
+
+export { IMAGE_QUALITY, IMAGE_QUALITY_HIGH, IMAGE_SIZES } from '@/app/lib/imageDefaults';

@@ -4,6 +4,7 @@ import { useParams } from 'next/navigation';
 import { useWebBuilder } from '@/app/providers/WebBuilderProvider';
 import { ServiceDetail } from '@/app/components/sections/ServiceDetail';
 import { Footer } from '@/app/components/layout/Footer';
+import { normalizeSlug, resolveServiceSlug } from '@/app/lib/serviceAreaSlugs';
 import Link from 'next/link';
 
 interface ServiceClientProps {
@@ -16,7 +17,8 @@ export default function ServiceClient({ serviceSlug: serviceSlugProp }: ServiceC
   
   const { site, services, loading, error } = useWebBuilder();
   
-  const service = services.find((s: any) => s.slug === serviceSlug);
+  const normSlug = normalizeSlug(serviceSlug);
+  const service = services.find((s) => resolveServiceSlug(s) === normSlug);
   
   if (loading) {
     return (
