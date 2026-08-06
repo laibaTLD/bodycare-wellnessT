@@ -1,12 +1,13 @@
 import { Metadata } from 'next'
 import { generateMetadata as buildMetadata, getSiteSeoData } from '@/app/lib/metadata'
 import { Page, Site } from '@/app/lib/types'
+import { getWebBuilderSiteSlug } from '@/app/lib/siteSlug'
 import api from '@/app/lib/fetch-api'
 import HomeClient from './HomeClient'
 
 export async function generateMetadata(): Promise<Metadata> {
   try {
-    const siteSlug = process.env.NEXT_PUBLIC_WEBBUILDER_SITE_SLUG
+    const siteSlug = getWebBuilderSiteSlug()
     if (!siteSlug) {
       return {
         title: 'Web Builder Site',

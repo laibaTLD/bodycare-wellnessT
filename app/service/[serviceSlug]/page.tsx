@@ -1,6 +1,7 @@
 import { Metadata } from 'next'
 import { generateMetadata, getServiceSeoData } from '@/app/lib/metadata'
-import { Service, Site } from '@/app/lib/types'
+import { fetchSiteForMetadata } from '@/app/lib/serverSite'
+import type { Service } from '@/app/lib/types'
 import api from '@/app/lib/fetch-api'
 import ServiceClient from './ServiceClient'
 
@@ -10,31 +11,26 @@ interface ServicePageProps {
 
 export async function generateServiceMetadata({ params }: ServicePageProps): Promise<Metadata> {
   const { serviceSlug } = params
-  
+
   try {
-    // Fetch default site first
-    const defaultSiteResponse = await api.get('/public/sites/default')
-    
-    if (defaultSiteResponse.success && defaultSiteResponse.data) {
-      const site: Site = defaultSiteResponse.data
-      
-      // Fetch all services and find by slug
-      const servicesResponse = await api.get(`/public/sites/${site.slug}/services`)
-      
-      if (servicesResponse.success && servicesResponse.data) {
-        const services: Service[] = servicesResponse.data
-        const service = services.find(s => s.slug === serviceSlug)
-        
-        if (service) {
-          return generateMetadata(getServiceSeoData(service), site)
-        }
-      }
+    const site = await fetchSiteForMetadata()
+    if (!site) return fallbackMetadata()
+
+    const servicesResponse = await api.get(`/public/sites/${site.slug}/services`, { silent: true })
+
+    if (servicesResponse.success && servicesResponse.data) {
+      const services: Service[] = servicesResponse.data
+      const service = services.find((s) => s.slug === serviceSlug)
+      if (service) return generateMetadata(getServiceSeoData(service), site)
     }
-  } catch (error) {
-    console.error('Error generating service metadata:', error)
+  } catch {
+    /* API unreachable — fallback metadata below */
   }
-  
-  // Fallback metadata
+
+  return fallbackMetadata()
+}
+
+function fallbackMetadata(): Metadata {
   return {
     title: 'Service Not Found',
     description: 'The requested service could not be found.',

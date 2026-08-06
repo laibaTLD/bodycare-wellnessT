@@ -231,7 +231,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
                 <Link
                   href="/project-detail"
                   className="inline-block px-8 py-4 font-medium text-sm tracking-wide uppercase transition-all duration-500 hover:shadow-2xl hover:-translate-y-1"
-                  style={{ ...styles.primaryCta, fontFamily: fonts.body, backgroundColor: colors.mainText }}
+                  style={{ ...styles.primaryCta, fontFamily: fonts.body, backgroundColor: colors.lightPrimaryText }}
                 >
                   View All Projects →
                 </Link>
@@ -277,7 +277,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
                     <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-300 group-hover:opacity-100">
                       <span
                         className={`rounded-full bg-white/90 px-5 py-2 text-xs font-medium uppercase tracking-wide`}
-                        style={{ color: colors.mainText, fontFamily: fonts.body }}
+                        style={{ color: colors.cardText, fontFamily: fonts.body }}
                       >
                         View Project
                       </span>
@@ -288,7 +288,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
                     <div className="flex items-start justify-between gap-3 mb-3">
                       <h3
                         className={`text-xl md:text-2xl font-semibold transition-colors hero-card-title`}
-                        style={{ fontFamily: fonts.heading, color: colors.mainText }}
+                        style={{ fontFamily: fonts.heading, color: colors.cardText }}
                       >
                         {title}
                       </h3>
@@ -302,7 +302,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = ({
                     {desc && (
                       <div
                         className={`line-clamp-3 flex-1 text-sm leading-relaxed`}
-                        style={{ color: colors.secondaryText, fontFamily: fonts.body }}
+                        style={{ color: colors.cardTextSecondary, fontFamily: fonts.body }}
                       >
                         {typeof desc === 'string' ? desc : <TiptapRenderer content={desc} as="inline" />}
                       </div>

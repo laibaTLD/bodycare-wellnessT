@@ -6,7 +6,7 @@ import { useWebBuilder } from '@/app/providers/WebBuilderProvider';
 import { TiptapRenderer } from '@/app/components/ui/TiptapRenderer';
 import { cn } from '@/app/lib/utils';
 import { useScrollAnimation } from '@/app/hooks/useScrollAnimation';
-import { useThemeColors } from '@/app/hooks/useTheme';
+import { useSectionTheme } from '@/app/hooks/useSectionTheme';
 import { ArrowRight } from 'lucide-react';
 import { ContactSideForm } from '@/app/components/ui/ContactSideForm';
 
@@ -31,7 +31,8 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
 }) => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const { site } = useWebBuilder();
-  const colors = useThemeColors();
+  const theme = useSectionTheme();
+  const colors = theme.colors;
 
   const { ref: titleRef, isVisible: titleVisible } =
     useScrollAnimation<HTMLHeadingElement>({ threshold: 0.2 });
@@ -179,9 +180,10 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
             <p
               ref={descRef}
               className={cn(
-                'mx-auto max-w-2xl text-lg leading-relaxed wb-text-on-light-secondary transition-all duration-1000 delay-300',
+                'mx-auto max-w-2xl text-lg leading-relaxed transition-all duration-1000 delay-300',
                 descVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
               )}
+              style={{ color: colors.secondaryText }}
             >
               <TiptapRenderer content={contactSection.description} as="inline" />
             </p>
@@ -212,19 +214,22 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
         <ContactSideForm isOpen={isFormOpen} onClose={() => setIsFormOpen(false)} />
 
         {(showContactInfo || showMap) && (
-          <div className="grid grid-cols-1 items-start gap-12 lg:grid-cols-2 lg:gap-16">
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-10 lg:items-stretch">
             {showContactInfo && (
               <div
-                className="rounded-3xl border backdrop-blur-sm p-8 lg:p-10 shadow-lg space-y-10"
+                className="flex h-full flex-col rounded-3xl border backdrop-blur-sm p-6 sm:p-8 lg:p-10 shadow-lg"
                 style={{
                   borderColor: 'color-mix(in srgb, var(--wb-primary) 10%, transparent)',
                   backgroundColor: 'color-mix(in srgb, var(--wb-card-bg-light) 90%, transparent)',
                 }}
               >
-                <div>
+                <div className="mb-8 shrink-0">
                   <h3
-                    className="mb-4 text-2xl font-semibold sm:text-3xl wb-text-on-light"
-                    style={{ fontFamily: 'var(--wb-heading-font, Georgia, serif)' }}
+                    className="mb-4 text-2xl font-semibold sm:text-3xl"
+                    style={{
+                      fontFamily: 'var(--wb-heading-font, Georgia, serif)',
+                      color: colors.cardText,
+                    }}
                   >
                     Where to find us
                   </h3>
@@ -236,7 +241,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                   />
                 </div>
 
-                <div className="grid grid-cols-1 gap-10 sm:grid-cols-2">
+                <div className="grid flex-1 grid-cols-1 content-start gap-8 sm:grid-cols-2 sm:gap-10">
                   {(address?.street || address?.city) && (
                     <div className="space-y-4">
                       <span
@@ -245,7 +250,10 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                       >
                         Head Office
                       </span>
-                      <p className="text-sm leading-relaxed wb-text-on-light-secondary">
+                      <p
+                        className="text-sm leading-relaxed"
+                        style={{ color: colors.cardTextSecondary }}
+                      >
                         {address?.street && (
                           <>
                             {address.street}
@@ -290,13 +298,13 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                       </span>
                       <a
                         href={`tel:${business.phone.replace(/\s/g, '')}`}
-                        className="text-sm wb-text-on-light-secondary transition-colors hover:opacity-80"
-                        style={{ color: 'inherit' }}
+                        className="text-sm transition-colors hover:opacity-80"
+                        style={{ color: colors.cardTextSecondary }}
                         onMouseEnter={(e) => {
                           e.currentTarget.style.color = colors.primaryButton;
                         }}
                         onMouseLeave={(e) => {
-                          e.currentTarget.style.color = '';
+                          e.currentTarget.style.color = colors.cardTextSecondary;
                         }}
                       >
                         {business.phone}
@@ -314,12 +322,13 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                       </span>
                       <a
                         href={`mailto:${business.email}`}
-                        className="text-sm wb-text-on-light-secondary transition-colors"
+                        className="text-sm transition-colors break-all"
+                        style={{ color: colors.cardTextSecondary }}
                         onMouseEnter={(e) => {
                           e.currentTarget.style.color = colors.primaryButton;
                         }}
                         onMouseLeave={(e) => {
-                          e.currentTarget.style.color = '';
+                          e.currentTarget.style.color = colors.cardTextSecondary;
                         }}
                       >
                         {business.email}
@@ -345,10 +354,16 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                         {businessHours.hours.map((day) => (
                           <div
                             key={day.day}
-                            className="flex justify-between gap-4 text-sm wb-text-on-light-secondary"
+                            className="flex flex-col gap-0.5 text-sm sm:flex-row sm:justify-between sm:gap-4"
+                            style={{ color: colors.cardTextSecondary }}
                           >
-                            <span className="font-medium wb-text-on-light">{DAY_LABELS[day.day]}</span>
-                            <span>{formatDayHours(day)}</span>
+                            <span
+                              className="font-medium shrink-0"
+                              style={{ color: colors.cardText }}
+                            >
+                              {DAY_LABELS[day.day]}
+                            </span>
+                            <span className="min-w-0 break-words sm:text-right">{formatDayHours(day)}</span>
                           </div>
                         ))}
                       </div>
@@ -360,7 +375,7 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
 
             {showMap && (
               <div
-                className="relative aspect-[4/3] w-full overflow-hidden rounded-3xl border shadow-lg"
+                className="relative min-h-[320px] w-full overflow-hidden rounded-3xl border shadow-lg lg:min-h-full lg:h-full"
                 style={{
                   borderColor: 'color-mix(in srgb, var(--wb-primary) 10%, transparent)',
                 }}
@@ -371,15 +386,18 @@ export const ContactSection: React.FC<ContactSectionProps> = ({
                     title="Office Location"
                     width="100%"
                     height="100%"
-                    className="h-full w-full border-0 grayscale contrast-[1.05] opacity-90 transition-all duration-700 hover:grayscale-0"
+                    className="absolute inset-0 h-full w-full border-0 grayscale contrast-[1.05] opacity-90 transition-all duration-700 hover:grayscale-0"
                     src={`https://maps.google.com/maps?q=${site.business.coordinates.latitude},${site.business.coordinates.longitude}&z=15&output=embed`}
                     allowFullScreen
                     loading="lazy"
                   />
                 ) : (
                   <div
-                    className="flex h-full min-h-[280px] items-center justify-center text-sm wb-text-on-light-secondary"
-                    style={{ backgroundColor: colors.sectionBackgroundLight }}
+                    className="flex h-full min-h-[320px] items-center justify-center text-sm lg:absolute lg:inset-0"
+                    style={{
+                      backgroundColor: colors.sectionBackgroundLight,
+                      color: colors.cardTextSecondary,
+                    }}
                   >
                     Map coordinates not configured
                   </div>

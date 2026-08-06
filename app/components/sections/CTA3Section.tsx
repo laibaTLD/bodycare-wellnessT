@@ -51,7 +51,7 @@ export const CTA3Section: React.FC<CTA3SectionProps> = ({ cta3Section, className
             {safeCta.title && (
               <div
                 className="text-3xl sm:text-4xl lg:text-5xl font-semibold leading-tight"
-                style={{ color: backgroundImageUrl ? '#FFFFFF' : themeColors.lightPrimaryText }}
+                style={{ color: backgroundImageUrl ? '#FFFFFF' : themeColors.darkPrimaryText }}
               >
                 <TiptapRenderer content={safeCta.title} />
               </div>
@@ -61,7 +61,9 @@ export const CTA3Section: React.FC<CTA3SectionProps> = ({ cta3Section, className
               <div
                 className="mt-6 text-base sm:text-lg lg:text-xl max-w-2xl"
                 style={{
-                  color: backgroundImageUrl ? 'rgba(255,255,255,0.88)' : themeColors.lightSecondaryText,
+                  color: backgroundImageUrl
+                    ? 'rgba(255,255,255,0.88)'
+                    : themeColors.darkSecondaryText,
                 }}
               >
                 <TiptapRenderer content={safeCta.description} />

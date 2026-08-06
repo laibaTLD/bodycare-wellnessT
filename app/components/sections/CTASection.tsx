@@ -117,7 +117,7 @@ export function CTASection({ ctaSection, className }: CTASectionProps) {
   return (
     <section
       className={cn(
-        'py-20 lg:py-32 relative overflow-hidden min-h-[600px] flex items-center',
+        'py-16 sm:py-20 lg:py-32 relative overflow-hidden min-h-[400px] sm:min-h-[600px] flex items-center',
         className
       )}
       style={cta?.backgroundColor ? { backgroundColor: cta.backgroundColor } : undefined}

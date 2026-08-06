@@ -156,8 +156,8 @@ export const ContactSideForm: React.FC<ContactSideFormProps> = ({ isOpen, onClos
           </button>
         </div>
 
-        <div className="flex min-h-0 flex-1 flex-col justify-center overflow-hidden px-6 pb-6 md:px-8">
-          <div className="mx-auto w-full max-w-[360px]">
+        <div className="flex min-h-0 flex-1 flex-col justify-start overflow-y-auto overscroll-contain px-6 pb-6 md:px-8 md:justify-center">
+          <div className="mx-auto w-full max-w-[360px] py-2">
             <header className="mb-5 space-y-2">
               <h2
                 className="text-[1.45rem] font-semibold leading-[1.15] md:text-[1.6rem]"

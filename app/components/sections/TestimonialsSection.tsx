@@ -148,10 +148,10 @@ export function TestimonialsSection({ testimonialsSection, className }: Testimon
           {description && (
             <p
               ref={descriptionRef}
-              className={`text-base md:text-lg max-w-3xl mx-auto leading-relaxed transition-all duration-1000 delay-300 wb-text-on-light-secondary ${
+              className={`text-base md:text-lg max-w-3xl mx-auto leading-relaxed transition-all duration-1000 delay-300 ${
                 descriptionVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
               }`}
-              style={{ fontFamily: theme.fonts.body }}
+              style={{ fontFamily: theme.fonts.body, color: theme.colors.secondaryText }}
             >
               {description}
             </p>

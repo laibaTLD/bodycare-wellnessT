@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Page } from '@/app/lib/types';
 import { TiptapRenderer } from '@/app/components/ui/TiptapRenderer';
 import { OptimizedImage, IMAGE_QUALITY_HIGH, IMAGE_SIZES } from '@/app/components/ui/OptimizedImage';
-import { getImageSrc, cn, TIPTAP_INHERIT } from '@/app/lib/utils';
+import { getImageSrc, cn, TIPTAP_INHERIT, pageSurfaceToneFromBackground } from '@/app/lib/utils';
 import { useThemeColors, useThemeFonts, useSectionContrast } from '@/app/hooks/useTheme';
 import { usePrefersReducedMotion } from '@/app/hooks/usePrefersReducedMotion';
 import { useWebBuilder } from '@/app/providers/WebBuilderProvider';
@@ -35,7 +35,12 @@ export const CTA2Section: React.FC<CTA2SectionProps> = ({ cta2Section, className
   );
   const customBg = safeCta.backgroundColor?.trim();
   const hasBgImage = Boolean(backgroundImageUrl);
-  const contrast = useSectionContrast(hasBgImage ? 'dark' : 'light');
+  const surfaceBg =
+    customBg ||
+    (hasBgImage ? '#0c0c0c' : site?.theme?.sectionBackgroundColorLight) ||
+    '#111827';
+  const isDarkSurface = hasBgImage || pageSurfaceToneFromBackground(surfaceBg) === 'dark';
+  const contrast = useSectionContrast(isDarkSurface ? 'dark' : 'light');
 
   useEffect(() => {
     if (!safeCta.enabled || !sectionRef.current) return;
@@ -101,12 +106,13 @@ export const CTA2Section: React.FC<CTA2SectionProps> = ({ cta2Section, className
       ref={sectionRef}
       className={cn(
         'relative isolate overflow-hidden py-20 md:py-28 lg:py-32',
-        !hasBgImage && 'wb-surface-light wb-hairline-t-light',
+        isDarkSurface ? 'wb-hairline-t' : 'wb-surface-light wb-hairline-t-light',
         className
       )}
       style={{
         backgroundColor: customBg || (hasBgImage ? '#0c0c0c' : themeColors.sectionBackground),
         fontFamily: themeFonts.body,
+        color: isDarkSurface ? themeColors.darkPrimaryText : themeColors.mainText,
       }}
     >
       {backgroundImageUrl ? (
@@ -155,7 +161,7 @@ export const CTA2Section: React.FC<CTA2SectionProps> = ({ cta2Section, className
         >
           <span
             className="pointer-events-none absolute -right-2 -top-3 select-none text-[clamp(4rem,12vw,7rem)] font-extralight leading-none opacity-[0.07]"
-            style={{ color: hasBgImage ? '#fff' : themeColors.mainText, fontFamily: themeFonts.heading }}
+            style={{ color: isDarkSurface ? '#fff' : themeColors.mainText, fontFamily: themeFonts.heading }}
             aria-hidden
           >
             →
@@ -166,7 +172,7 @@ export const CTA2Section: React.FC<CTA2SectionProps> = ({ cta2Section, className
             <span
               className={cn(
                 'text-[10px] font-semibold uppercase tracking-[0.38em]',
-                hasBgImage ? 'text-white/70' : contrast.textSecondary
+                isDarkSurface ? 'text-white/70' : contrast.textSecondary
               )}
               style={{ fontFamily: themeFonts.body }}
             >
@@ -179,7 +185,7 @@ export const CTA2Section: React.FC<CTA2SectionProps> = ({ cta2Section, className
               data-cta2-reveal
               className={cn(
                 'text-balance text-[clamp(1.75rem,4.2vw,3.25rem)] font-light uppercase leading-[1.02] tracking-[-0.02em]',
-                hasBgImage ? 'text-white' : contrast.textPrimary
+                isDarkSurface ? 'text-white' : contrast.textPrimary
               )}
               style={{ fontFamily: themeFonts.heading }}
             >
@@ -192,7 +198,7 @@ export const CTA2Section: React.FC<CTA2SectionProps> = ({ cta2Section, className
               data-cta2-reveal
               className={cn(
                 'mt-6 max-w-xl text-sm font-light leading-relaxed md:text-base',
-                hasBgImage ? 'text-white/85' : contrast.textSecondary
+                isDarkSurface ? 'text-white/85' : contrast.textSecondary
               )}
               style={{ fontFamily: themeFonts.body }}
             >

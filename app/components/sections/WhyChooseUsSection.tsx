@@ -196,7 +196,7 @@ export function WhyChooseUsSection({ whyChooseUsSection, className }: WhyChooseU
                       {service.name && (
                         <h3
                           className={`text-xl md:text-2xl font-semibold transition-colors wcu-card-title`}
-                          style={{ fontFamily: fonts.heading, color: colors.mainText }}
+                          style={{ fontFamily: fonts.heading, color: colors.cardText }}
                         >
                           {service.name}
                         </h3>
@@ -207,7 +207,7 @@ export function WhyChooseUsSection({ whyChooseUsSection, className }: WhyChooseU
                       {service.description && (
                         <div
                           className={`leading-relaxed mb-6 flex-1`}
-                          style={{ color: colors.mainText, opacity: 0.8, fontFamily: fonts.body }}
+                          style={{ color: colors.cardText, opacity: 0.8, fontFamily: fonts.body }}
                         >
                           {service.descriptionContent &&
                           typeof service.descriptionContent === 'object' ? (
@@ -220,7 +220,7 @@ export function WhyChooseUsSection({ whyChooseUsSection, className }: WhyChooseU
                       {service.name && (
                         <h3
                           className={`text-xl md:text-2xl font-semibold mt-auto transition-colors wcu-card-title`}
-                          style={{ fontFamily: fonts.heading, color: colors.mainText }}
+                          style={{ fontFamily: fonts.heading, color: colors.cardText }}
                         >
                           {service.titleContent && typeof service.titleContent === 'object' ? (
                             <TiptapRenderer content={service.titleContent} as="inline" />

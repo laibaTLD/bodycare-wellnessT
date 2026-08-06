@@ -4,8 +4,10 @@ import React, { createContext, useContext, useEffect, useState, ReactNode } from
 import { Site, Page, Service, BlogPost, Project } from '@/app/lib/types';
 import { siteApi, pageApi, serviceApi, blogApi, projectApi, testimonialApi, serviceAreaApi } from '@/app/lib/api';
 
+import { getWebBuilderSiteSlug } from '@/app/lib/siteSlug';
+
 // Site slug from environment variable
-const SITE_SLUG = process.env.NEXT_PUBLIC_WEBBUILDER_SITE_SLUG;
+const SITE_SLUG = getWebBuilderSiteSlug();
 
 /** Parsed poll interval in ms; 0 disables polling. Defaults avoid API rate limits in production. */
 function readPollIntervalMs(envKey: string, defaultMs: number): number {
@@ -78,13 +80,15 @@ export const WebBuilderProvider: React.FC<WebBuilderProviderProps> = ({ children
     try {
       setLoading(true);
       setError(null);
-      
-      // Use real API when backend is available
+
       const siteData = await siteApi.getSiteBySlug(slug);
       setSite(siteData);
-      
-      await Promise.all([
-        loadPages(siteData.slug),
+
+      // Unblock home as soon as pages land; load the rest in the background.
+      await loadPages(siteData.slug);
+      setLoading(false);
+
+      void Promise.all([
         loadServicesBySiteSlug(siteData.slug),
         loadBlogPosts(siteData.slug),
         loadProjects(siteData.slug),
@@ -94,11 +98,10 @@ export const WebBuilderProvider: React.FC<WebBuilderProviderProps> = ({ children
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Failed to load site';
       setError(
-        msg.includes('500')
+        msg.includes('500') || msg.includes('502') || msg.includes('503')
           ? 'The site builder API is temporarily unavailable. Refresh the page or try again shortly.'
           : msg
       );
-    } finally {
       setLoading(false);
     }
   };

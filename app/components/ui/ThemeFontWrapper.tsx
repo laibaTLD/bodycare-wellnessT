@@ -2,6 +2,7 @@
 
 import React, { useEffect, useMemo } from 'react';
 import { useWebBuilder } from '@/app/providers/WebBuilderProvider';
+import { pageSurfaceToneFromBackground } from '@/app/lib/utils';
 
 interface ThemeFontWrapperProps {
   children: React.ReactNode;
@@ -43,15 +44,24 @@ export const ThemeFontWrapper: React.FC<ThemeFontWrapperProps> = ({ children }) 
       // Text colors
       if (theme.lightPrimaryColor) styles['--wb-text-main'] = theme.lightPrimaryColor;
       if (theme.lightSecondaryColor) styles['--wb-text-secondary'] = theme.lightSecondaryColor;
-      if (theme.textOnDarkColor) styles['--wb-text-on-dark'] = theme.textOnDarkColor;
-      else if (theme.darkPrimaryColor) styles['--wb-text-on-dark'] = theme.darkPrimaryColor;
-      else if (theme.lightPrimaryColor) styles['--wb-text-on-dark'] = theme.lightPrimaryColor;
+
+      // On-dark copy: never fall back to light-surface ink (unreadable on dark section BGs).
+      if (theme.textOnDarkColor) {
+        styles['--wb-text-on-dark'] = theme.textOnDarkColor;
+      } else if (theme.darkPrimaryColor) {
+        styles['--wb-text-on-dark'] = theme.darkPrimaryColor;
+      }
+
       if (theme.textOnDarkSecondaryColor) {
         styles['--wb-text-on-dark-secondary'] = theme.textOnDarkSecondaryColor;
-      } else if (theme.darkSecondaryColor) {
+      } else if (
+        theme.darkSecondaryColor &&
+        pageSurfaceToneFromBackground(theme.darkSecondaryColor) === 'light'
+      ) {
+        // Only use darkSecondary when it is actually a light color (readable on dark BG).
         styles['--wb-text-on-dark-secondary'] = theme.darkSecondaryColor;
-      } else if (theme.lightSecondaryColor) {
-        styles['--wb-text-on-dark-secondary'] = theme.lightSecondaryColor;
+      } else if (theme.darkPrimaryColor) {
+        styles['--wb-text-on-dark-secondary'] = theme.darkPrimaryColor;
       }
 
       // Primary UI Colors (Buttons etc)

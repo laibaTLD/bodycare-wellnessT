@@ -135,7 +135,11 @@ const createFetchApi = (baseURL: string, defaultTimeout = 30000) => {
               error.message?.includes('404') ||
               error.message?.includes('status: 404') ||
               error.message?.toLowerCase().includes('not found');
-            if (!silent && !isNotFound) {
+            const isGatewayError =
+              error.message?.includes('502') ||
+              error.message?.includes('503') ||
+              error.message?.includes('504');
+            if (!silent && !isNotFound && !isGatewayError) {
               console.error(`[fetch-api] Error for ${url}:`, error.message);
             }
             throw new FetchError(error.message, (error as FetchError).status, (error as FetchError).response);

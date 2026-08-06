@@ -328,3 +328,11 @@ export function getPrimaryHeroImageFromHero(hero?: Page['hero']): string {
   const url = o.url || o.image?.url;
   return url ? getImageSrc(url) : '';
 }
+
+export {
+  type CmsImageRef,
+  type ServiceAreaImageFallbackKey,
+  collectServiceAreaImageFallbacks,
+  resolveSectionImageFromRecord,
+  resolveSectionImageUrl,
+} from '@/app/lib/sectionImages';

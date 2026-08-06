@@ -17,89 +17,20 @@ import { CTASection } from '@/app/components/sections/CTASection';
 import { GallerySection } from '@/app/components/sections/GallerySection';
 import { ServingAreasSection } from '@/app/components/sections/ServingAreasSection';
 import { getThemeColors } from '@/app/lib/themeBuilder';
-import { PageContentLoader } from '@/app/components/ui/PageContentLoader';
 
 export default function HomeClient() {
-  const { site, pages, loading, error } = useWebBuilder();
-
-  // Get theme colors from site using the new dynamic CSS variable system
+  const { site, pages, loading } = useWebBuilder();
 
   const themeColors = getThemeColors(site);
-
-  // Get theme fonts from site
   const themeFonts = {
     heading: site?.theme?.headingFont,
     body: site?.theme?.bodyFont,
   };
 
-  if (loading) {
-    return <PageContentLoader />;
-  }
-
-  if (error && !site) {
-    return (
-      <div 
-        className="min-h-screen flex items-center justify-center p-4"
-        style={{ backgroundColor: themeColors.pageBackground }}
-      >
-        <div 
-          className="p-6 rounded-lg max-w-lg text-center"
-          style={{ 
-            backgroundColor: themeColors.cardBackground,
-            borderColor: themeColors.inactive,
-            borderWidth: '1px'
-          }}
-        >
-          <h2
-            className="mb-2 text-xl font-bold"
-            style={{
-              color: themeColors.mainText,
-              fontFamily: themeFonts.heading,
-            }}
-          >
-            Error
-          </h2>
-          <p
-            style={{
-              color: themeColors.secondaryText,
-              fontFamily: themeFonts.body,
-            }}
-          >
-            {error}
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   const displayPage = pages.find((p: Page) => p.pageType === 'home');
 
-  if (!displayPage) {
-    return (
-      <div 
-        className="min-h-screen flex flex-col items-center justify-center p-4"
-        style={{ backgroundColor: themeColors.pageBackground }}
-      >
-        <h2 
-          className="text-2xl font-bold mb-4"
-          style={{ 
-            color: themeColors.mainText,
-            fontFamily: themeFonts.heading
-          }}
-        >
-          No Home Page Found
-        </h2>
-        <p 
-          style={{ 
-            color: themeColors.secondaryText,
-            fontFamily: themeFonts.body
-          }}
-        >
-          Please create a page with type &quot;home&quot; in the site builder.
-        </p>
-      </div>
-    );
-  }
+  // No spinner / empty-state screens — wait silently until home content is ready.
+  if (loading || !displayPage) return null;
 
   return (
     <div
@@ -111,7 +42,7 @@ export default function HomeClient() {
       }}
     >
 
-      <main>
+      <div>
         <HeroSection hero={displayPage.hero} page={displayPage} />
         <AboutSection aboutSection={displayPage.aboutSection} page={displayPage} />
         <ServicesSection
@@ -136,7 +67,7 @@ export default function HomeClient() {
           servingAreasSection={displayPage.servingAreasSection ?? { enabled: true }}
         />
         <ContactSection contactSection={displayPage.contactSection} />
-      </main>
+      </div>
       <Footer />
     </div>
   );

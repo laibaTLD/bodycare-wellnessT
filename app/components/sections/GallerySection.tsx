@@ -133,24 +133,6 @@ function GalleryTile({ image, index, total, visible, onOpen }: GalleryTileProps)
         className="absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100 group-focus-visible:opacity-100"
         style={styles.imageOverlay}
       />
-      <div className="absolute inset-x-0 bottom-0 translate-y-2 p-4 opacity-0 transition-all duration-500 group-hover:translate-y-0 group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:opacity-100 sm:p-5">
-        <span
-          className="mb-2 inline-block rounded-full px-3 py-1 text-[10px] font-medium uppercase tracking-widest backdrop-blur-sm"
-          style={{
-            backgroundColor: 'color-mix(in srgb, var(--wb-card-bg-light) 85%, transparent)',
-            color: colors.mainText,
-            fontFamily: fonts.body,
-          }}
-        >
-          {String(index + 1).padStart(2, '0')}
-        </span>
-        <p
-          className="text-sm font-semibold text-white drop-shadow-md sm:text-base"
-          style={{ fontFamily: fonts.heading }}
-        >
-          {image.title}
-        </p>
-      </div>
       <div
         className="absolute top-3 right-3 flex h-9 w-9 items-center justify-center rounded-full opacity-0 backdrop-blur-md transition-all duration-300 group-hover:opacity-100"
         style={{ backgroundColor: 'color-mix(in srgb, var(--wb-card-bg-light) 90%, transparent)' }}
@@ -198,7 +180,7 @@ function GalleryLightbox({
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-8"
+      className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-3 sm:p-8 overflow-y-auto"
       role="dialog"
       aria-modal="true"
       aria-label={image.title}
@@ -209,8 +191,8 @@ function GalleryLightbox({
         onClick={onClose}
         aria-label="Close gallery"
       />
-      <div className="relative z-10 flex w-full max-w-5xl flex-col">
-        <div className="relative aspect-[4/3] min-h-[50vh] w-full max-h-[85vh] overflow-hidden rounded-2xl shadow-2xl sm:aspect-[16/10] sm:rounded-3xl">
+      <div className="relative z-10 flex w-full max-w-5xl flex-col my-auto max-h-[100dvh]">
+        <div className="relative aspect-[4/3] w-full max-h-[min(70vh,85dvh)] overflow-hidden rounded-2xl shadow-2xl sm:aspect-[16/10] sm:rounded-3xl">
           <OptimizedImage
             src={image.imageUrl}
             alt={image.altText}
@@ -227,7 +209,7 @@ function GalleryLightbox({
             backgroundColor: 'color-mix(in srgb, var(--wb-card-bg-light) 95%, transparent)',
           }}
         >
-          <p className="text-lg font-semibold sm:text-xl" style={{ fontFamily: fonts.heading, color: colors.mainText }}>
+          <p className="text-lg font-semibold sm:text-xl" style={{ fontFamily: fonts.heading, color: colors.cardText }}>
             {image.title}
           </p>
           <div className="flex shrink-0 items-center gap-2">
@@ -261,7 +243,7 @@ function GalleryLightbox({
               type="button"
               onClick={onClose}
               className="flex h-10 w-10 items-center justify-center rounded-full border transition-colors hover:opacity-80"
-              style={{ borderColor: 'color-mix(in srgb, var(--wb-primary) 30%, transparent)', color: colors.mainText }}
+              style={{ borderColor: 'color-mix(in srgb, var(--wb-primary) 30%, transparent)', color: colors.cardText }}
               aria-label="Close"
             >
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -374,7 +356,7 @@ export function GallerySection({ gallerySection, className }: GallerySectionProp
               <div
                 ref={descRef}
                 className={cn(
-                  'wb-text-on-light-secondary mx-auto max-w-2xl text-base leading-relaxed transition-all duration-1000 delay-300 md:text-lg',
+                  'mx-auto max-w-2xl text-base leading-relaxed transition-all duration-1000 delay-300 md:text-lg',
                   descVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
                 )}
                 style={{ color: colors.secondaryText, fontFamily: fonts.body }}

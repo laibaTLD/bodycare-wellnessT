@@ -7,7 +7,7 @@ import type { Page } from '@/app/lib/types';
 import { TiptapRenderer } from '@/app/components/ui/TiptapRenderer';
 import { getImageSrc, cn } from '@/app/lib/utils';
 import { useWebBuilder } from '@/app/providers/WebBuilderProvider';
-import { useScrollAnimation } from '@/app/hooks/useScrollAnimation';
+import { useScrollAnimation, useStaggeredAnimation } from '@/app/hooks/useScrollAnimation';
 import { useSectionTheme } from '@/app/hooks/useSectionTheme';
 import { CardLoader } from '@/app/components/ui/SkeletonLoader';
 import { tiptapToText } from '@/app/lib/seo';
@@ -67,7 +67,7 @@ function formatPostDate(iso: string | undefined, show: boolean): string | null {
   if (!show || !iso) return null;
   try {
     return new Intl.DateTimeFormat(undefined, {
-      month: 'long',
+      month: 'short',
       day: 'numeric',
       year: 'numeric',
     }).format(new Date(iso));
@@ -131,23 +131,30 @@ export const BlogSection: React.FC<BlogSectionProps> = ({ blogSection, className
   if (!sectionData?.enabled) return null;
 
   const count = Math.min(Math.max(sectionData.postsToShow || 3, 1), 12);
-  const displayPosts = blogPosts.slice(0, count);
+  const displayPosts = blogPosts.slice(0, count) as BlogPostItem[];
   const showExcerpt = Boolean(sectionData.showExcerpt);
   const showDate = Boolean(sectionData.showDate);
 
+  const { ref: gridRef, visibleItems, isVisible: gridVisible } = useStaggeredAnimation(
+    displayPosts.length > 1 ? displayPosts.length - 1 : 0,
+    120
+  );
+
   if (loading && blogPosts.length === 0) {
     return (
-      <section className={cn('relative py-20', className)} id="blog" style={{ backgroundColor: colors.pageBackground }}>
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid gap-8 lg:grid-cols-12">
-            <div className="aspect-[16/10] animate-pulse rounded-3xl lg:col-span-7" style={styles.imagePlaceholder} />
-            <div className="space-y-6 lg:col-span-5">
-              {[1, 2].map((i) => (
-                <div key={i} className="rounded-3xl border p-4" style={styles.card}>
-                  <CardLoader />
-                </div>
-              ))}
-            </div>
+      <section
+        className={cn('relative overflow-hidden py-16 sm:py-20 lg:py-28', className)}
+        id="blog"
+        style={{ fontFamily: fonts.body }}
+      >
+        <div className="absolute inset-0" style={styles.sectionGradientBgSoft} />
+        <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="overflow-hidden rounded-3xl border p-4" style={styles.card}>
+                <CardLoader />
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -158,118 +165,101 @@ export const BlogSection: React.FC<BlogSectionProps> = ({ blogSection, className
     return null;
   }
 
-  const [featured, ...morePosts] = displayPosts as BlogPostItem[];
+  const [featured, ...rest] = displayPosts;
 
   return (
     <section
       id="blog"
-      className={cn('relative overflow-hidden py-20 lg:py-32', className)}
+      className={cn('relative overflow-hidden py-16 sm:py-20 lg:py-28', className)}
       style={{ fontFamily: fonts.body }}
     >
-      <div className="absolute inset-0 bg-gradient-to-br from-[#f0f4f1] via-[#f8f8f5] to-white" />
+      <div className="absolute inset-0" style={styles.sectionGradientBgSoft} />
 
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {[...Array(6)].map((_, i) => (
+        {[...Array(8)].map((_, i) => (
           <div
             key={i}
-            className="absolute w-1 h-1 bg-[#7A9A5C] rounded-full opacity-20 animate-float"
-            style={{ left: `${12 + i * 13}%`, top: `${8 + i * 12}%`, animationDelay: `${i * 0.6}s` }}
+            className="absolute h-1 w-1 rounded-full opacity-25 animate-float"
+            style={{
+              ...styles.floatingDot,
+              left: `${10 + i * 11}%`,
+              top: `${12 + i * 9}%`,
+              animationDelay: `${i * 0.55}s`,
+            }}
           />
         ))}
       </div>
 
       <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="mb-16 text-center lg:mb-20">
-          <div
-            className={`inline-flex items-center justify-center w-16 h-16 rounded-full mb-8 shadow-lg transition-all duration-1000 ${
-              titleVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-75'
-            }`}
-            style={{ background: 'linear-gradient(135deg, #7A9A5C, #5D6939)' }}
+        <div className="mb-12 flex flex-col gap-8 lg:mb-16 lg:flex-row lg:items-end lg:justify-between">
+          <div className="max-w-2xl">
+            {hasTitle && (
+              <h2
+                ref={titleRef}
+                className={cn(
+                  'text-3xl font-semibold leading-tight sm:text-4xl md:text-5xl transition-all duration-1000',
+                  titleVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+                )}
+                style={{ fontFamily: fonts.heading, ...styles.titleGradient }}
+              >
+                <TiptapRenderer content={titleContent} as="inline" />
+              </h2>
+            )}
+
+            {hasDescription && (
+              <div
+                ref={descRef}
+                className={cn(
+                  'mt-4 text-base leading-relaxed sm:text-lg transition-all duration-1000 delay-200',
+                  descVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+                )}
+                style={{ color: colors.secondaryText, fontFamily: fonts.body }}
+              >
+                <TiptapRenderer content={descriptionContent} as="inline" />
+              </div>
+            )}
+          </div>
+
+          <Link
+            href="/blog"
+            className="inline-flex shrink-0 items-center gap-2 self-start rounded-full px-6 py-3 text-sm font-medium uppercase tracking-wide transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg lg:self-auto"
+            style={styles.primaryCta}
           >
-            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"
-              />
-            </svg>
-          </div>
-
-          {hasTitle && (
-            <h2
-              ref={titleRef}
-              className={cn(
-                'text-4xl md:text-5xl lg:text-6xl font-semibold mb-6 transition-all duration-1000',
-                titleVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-              )}
-              style={{
-                fontFamily: fonts.heading,
-                background: 'linear-gradient(135deg, #242A26 0%, #7A9A5C 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-              }}
-            >
-              <TiptapRenderer content={titleContent} as="inline" />
-            </h2>
-          )}
-
-          <div className="flex items-center justify-center mb-6">
-            <div className="w-16 h-px bg-[#7A9A5C]/30" />
-            <div className="w-4 h-4 bg-[#7A9A5C] rounded-full mx-6 animate-pulse" />
-            <div className="w-16 h-px bg-[#7A9A5C]/30" />
-          </div>
-
-          {hasDescription && (
-            <div
-              ref={descRef}
-              className={cn(
-                'mx-auto max-w-3xl text-lg text-[#242A26]/70 leading-relaxed transition-all duration-1000 delay-300',
-                descVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-              )}
-            >
-              <TiptapRenderer content={descriptionContent} as="inline" />
-            </div>
-          )}
-
-          <div className="mt-10 flex justify-center">
-            <Link
-              href="/blog"
-              className="inline-block px-8 py-4 bg-[#2A2A2A] text-white font-medium text-sm tracking-wide uppercase transition-all duration-500 hover:bg-[#7A9A5C] hover:shadow-2xl hover:-translate-y-1"
-            >
-              View All Articles →
-            </Link>
-          </div>
+            View all articles
+            <span aria-hidden>→</span>
+          </Link>
         </div>
 
         {displayPosts.length === 0 ? (
-          <p className="text-center text-sm text-[#242A26]/60">
+          <p className="text-center text-sm" style={{ color: colors.secondaryText }}>
             No published posts yet. Add posts in the builder to show them here.
           </p>
         ) : (
-          <div className="grid gap-8 lg:grid-cols-12 lg:gap-10">
+          <div className="space-y-8 lg:space-y-10">
             {featured && (
               <FeaturedPostCard
                 post={featured}
                 showExcerpt={showExcerpt}
                 showDate={showDate}
-                className="lg:col-span-7"
+                visible
               />
             )}
 
-            {morePosts.length > 0 && (
-              <div className="lg:col-span-5">
-                <p className="mb-6 text-sm font-medium uppercase tracking-wide text-[#7A9A5C]">
-                  More Articles
-                </p>
-                <ul className="space-y-4">
-                  {morePosts.map((post) => (
-                    <li key={post._id}>
-                      <MorePostCard post={post} showDate={showDate} />
-                    </li>
-                  ))}
-                </ul>
+            {rest.length > 0 && (
+              <div
+                ref={gridRef}
+                className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 lg:gap-8"
+              >
+                {rest.map((post, index) => (
+                  <PostCard
+                    key={post._id}
+                    post={post}
+                    showExcerpt={showExcerpt}
+                    showDate={showDate}
+                    visible={gridVisible && visibleItems.includes(index)}
+                    index={index}
+                  />
+                ))}
               </div>
             )}
           </div>
@@ -280,14 +270,14 @@ export const BlogSection: React.FC<BlogSectionProps> = ({ blogSection, className
         @keyframes float {
           0%,
           100% {
-            transform: translateY(0px);
+            transform: translateY(0);
           }
           50% {
-            transform: translateY(-8px);
+            transform: translateY(-10px);
           }
         }
         .animate-float {
-          animation: float 4s ease-in-out infinite;
+          animation: float 4.5s ease-in-out infinite;
         }
       `}</style>
     </section>
@@ -303,26 +293,29 @@ function PostMeta({
   showDate: boolean;
   className?: string;
 }) {
-  const { fonts } = useSectionTheme();
+  const { colors, fonts } = useSectionTheme();
   const dateLabel = formatPostDate(post.publishedAt || post.createdAt, showDate);
   const author = post.author?.name?.trim();
   const category = post.categories?.[0];
 
   return (
     <div
-      className={cn(
-        'flex flex-wrap items-center gap-2 text-xs uppercase tracking-wide text-[#242A26]/50',
-        className
-      )}
-      style={{ fontFamily: fonts.body }}
+      className={cn('flex flex-wrap items-center gap-x-3 gap-y-1 text-xs tracking-wide', className)}
+      style={{ fontFamily: fonts.body, color: colors.secondaryText }}
     >
       {category && (
-        <span className="rounded-full border border-[#7A9A5C]/30 bg-[#7A9A5C]/10 px-2.5 py-0.5 font-medium text-[#7A9A5C]">
+        <span
+          className="rounded-full px-2.5 py-0.5 font-medium uppercase"
+          style={{
+            backgroundColor: 'color-mix(in srgb, var(--wb-primary) 14%, transparent)',
+            color: colors.primaryButton,
+          }}
+        >
           {category}
         </span>
       )}
-      {author && <span>By {author}</span>}
-      {dateLabel && <span>{dateLabel}</span>}
+      {dateLabel && <time dateTime={post.publishedAt || post.createdAt}>{dateLabel}</time>}
+      {author && <span>by {author}</span>}
     </div>
   );
 }
@@ -331,38 +324,44 @@ function FeaturedPostCard({
   post,
   showExcerpt,
   showDate,
-  className,
+  visible,
 }: {
   post: BlogPostItem;
   showExcerpt: boolean;
   showDate: boolean;
-  className?: string;
+  visible: boolean;
 }) {
-  const { fonts } = useSectionTheme();
+  const { colors, fonts, styles } = useSectionTheme();
   const imgSrc = getPostImageSrc(post);
 
   return (
     <article
       className={cn(
-        'group overflow-hidden rounded-3xl border border-[#7A9A5C]/10 bg-white/90 backdrop-blur-sm shadow-lg transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl',
-        className
+        'group overflow-hidden rounded-3xl border shadow-lg transition-all duration-700 hover:-translate-y-1 hover:shadow-2xl',
+        visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
       )}
-      style={{ fontFamily: fonts.body }}
+      style={{ ...styles.card, fontFamily: fonts.body }}
     >
-      <Link href={`/blog/${post.slug}`} className="block no-underline">
-        <div className="relative aspect-[16/10] overflow-hidden bg-[#e8f0ea]">
+      <Link
+        href={`/blog/${post.slug}`}
+        className="grid no-underline lg:grid-cols-2 lg:min-h-[360px]"
+      >
+        <div className="relative aspect-[16/10] overflow-hidden lg:aspect-auto lg:min-h-full" style={styles.imagePlaceholder}>
           {imgSrc ? (
             <OptimizedImage
               src={imgSrc}
               alt={getPostImageAlt(post)}
               fill
               sizes={IMAGE_SIZES.sectionHalf}
-              className="object-cover transition-transform duration-700 group-hover:scale-110"
+              className="object-cover transition-transform duration-700 group-hover:scale-105"
               priority
             />
           ) : (
-            <div className="flex h-full items-center justify-center text-[#7A9A5C]/30">
-              <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div
+              className="flex h-full min-h-[220px] items-center justify-center lg:min-h-full"
+              style={{ color: 'color-mix(in srgb, var(--wb-primary) 35%, transparent)' }}
+            >
+              <svg className="h-16 w-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -372,26 +371,35 @@ function FeaturedPostCard({
               </svg>
             </div>
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-[#7A9A5C]/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+          <div className="absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100" style={styles.imageOverlay} />
         </div>
 
-        <div className="space-y-4 p-6 md:p-8">
+        <div className="flex flex-col justify-center gap-4 p-6 sm:p-8 lg:p-10">
           <PostMeta post={post} showDate={showDate} />
           {post.title && (
             <h3
-              className="text-2xl font-semibold text-[#242A26] md:text-3xl group-hover:text-[#7A9A5C] transition-colors"
-              style={{ fontFamily: fonts.heading }}
+              className="text-2xl font-semibold leading-tight sm:text-3xl lg:text-4xl transition-colors group-hover:text-[var(--wb-primary)]"
+              style={{ fontFamily: fonts.heading, color: colors.cardText }}
             >
               {post.title}
             </h3>
           )}
           {showExcerpt && Boolean(post.excerpt) && (
-            <div className="line-clamp-3 text-sm leading-relaxed text-[#242A26]/70">
+            <div
+              className="line-clamp-3 text-sm leading-relaxed sm:text-base"
+              style={{ color: colors.cardTextSecondary }}
+            >
               <TiptapRenderer content={post.excerpt} as="inline" />
             </div>
           )}
-          <span className="inline-block text-xs font-medium uppercase tracking-wide text-[#7A9A5C]">
-            Read Article →
+          <span
+            className="mt-2 inline-flex items-center gap-2 text-xs font-medium uppercase tracking-wide"
+            style={{ color: colors.primaryButton }}
+          >
+            Read article
+            <span className="transition-transform duration-300 group-hover:translate-x-1" aria-hidden>
+              →
+            </span>
           </span>
         </div>
       </Link>
@@ -399,54 +407,89 @@ function FeaturedPostCard({
   );
 }
 
-function MorePostCard({ post, showDate }: { post: BlogPostItem; showDate: boolean }) {
-  const { fonts } = useSectionTheme();
+function PostCard({
+  post,
+  showExcerpt,
+  showDate,
+  visible,
+  index,
+}: {
+  post: BlogPostItem;
+  showExcerpt: boolean;
+  showDate: boolean;
+  visible: boolean;
+  index: number;
+}) {
+  const { colors, fonts, styles } = useSectionTheme();
   const imgSrc = getPostImageSrc(post);
 
   return (
-    <Link
-      href={`/blog/${post.slug}`}
-      className="group flex gap-4 overflow-hidden rounded-3xl border border-[#7A9A5C]/10 bg-white/90 p-4 shadow-md transition-all duration-500 hover:-translate-y-1 hover:shadow-xl no-underline"
-      style={{ fontFamily: fonts.body }}
+    <article
+      className={cn(
+        'group flex h-full flex-col overflow-hidden rounded-3xl border shadow-md transition-all duration-700 hover:-translate-y-1.5 hover:shadow-xl',
+        visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
+      )}
+      style={{
+        ...styles.card,
+        fontFamily: fonts.body,
+        transitionDelay: `${index * 80}ms`,
+      }}
     >
-      <div className="relative h-20 w-24 shrink-0 overflow-hidden rounded-2xl bg-[#e8f0ea] sm:h-24 sm:w-28">
-        {imgSrc ? (
-          <OptimizedImage
-            src={imgSrc}
-            alt={getPostImageAlt(post)}
-            fill
-            sizes={IMAGE_SIZES.thumb}
-            className="object-cover transition-transform duration-500 group-hover:scale-110"
-          />
-        ) : (
-          <div className="flex h-full items-center justify-center text-[#7A9A5C]/30">
-            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={1.5}
-                d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"
-              />
-            </svg>
-          </div>
-        )}
-      </div>
+      <Link href={`/blog/${post.slug}`} className="flex h-full flex-col no-underline">
+        <div className="relative aspect-[16/11] overflow-hidden" style={styles.imagePlaceholder}>
+          {imgSrc ? (
+            <OptimizedImage
+              src={imgSrc}
+              alt={getPostImageAlt(post)}
+              fill
+              sizes={IMAGE_SIZES.card}
+              className="object-cover transition-transform duration-700 group-hover:scale-110"
+            />
+          ) : (
+            <div
+              className="flex h-full items-center justify-center"
+              style={{ color: 'color-mix(in srgb, var(--wb-primary) 35%, transparent)' }}
+            >
+              <svg className="h-10 w-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"
+                />
+              </svg>
+            </div>
+          )}
+          <div className="absolute inset-0 opacity-0 transition-opacity duration-500 group-hover:opacity-100" style={styles.imageOverlay} />
+        </div>
 
-      <div className="min-w-0 flex-1">
-        <PostMeta post={post} showDate={showDate} className="mb-2" />
-        {post.title && (
-          <h4
-            className="text-base font-semibold text-[#242A26] sm:text-lg group-hover:text-[#7A9A5C] transition-colors"
-            style={{ fontFamily: fonts.heading }}
+        <div className="flex flex-1 flex-col gap-3 p-5 sm:p-6">
+          <PostMeta post={post} showDate={showDate} />
+          {post.title && (
+            <h3
+              className="text-lg font-semibold leading-snug sm:text-xl transition-colors group-hover:text-[var(--wb-primary)]"
+              style={{ fontFamily: fonts.heading, color: colors.cardText }}
+            >
+              {post.title}
+            </h3>
+          )}
+          {showExcerpt && Boolean(post.excerpt) && (
+            <div
+              className="line-clamp-2 flex-1 text-sm leading-relaxed"
+              style={{ color: colors.cardTextSecondary }}
+            >
+              <TiptapRenderer content={post.excerpt} as="inline" />
+            </div>
+          )}
+          <span
+            className="mt-auto pt-2 text-xs font-medium uppercase tracking-wide"
+            style={{ color: colors.primaryButton }}
           >
-            {post.title}
-          </h4>
-        )}
-        <span className="mt-2 inline-block text-xs font-medium uppercase tracking-wide text-[#7A9A5C] opacity-0 transition-opacity group-hover:opacity-100">
-          Read →
-        </span>
-      </div>
-    </Link>
+            Read →
+          </span>
+        </div>
+      </Link>
+    </article>
   );
 }
 

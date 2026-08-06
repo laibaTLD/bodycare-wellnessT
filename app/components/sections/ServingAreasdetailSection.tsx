@@ -9,13 +9,12 @@ import { About } from './serving-area-detail-sections/About';
 import { OurServices } from './serving-area-detail-sections/OurServices';
 import { CTA } from './serving-area-detail-sections/CTA';
 import { ServiceOverview } from './serving-area-detail-sections/ServiceOverview';
-import { ServiceDetails } from './serving-area-detail-sections/ServiceDetails';
-import { WhyChooseUs } from './serving-area-detail-sections/WhyChooseUs';
+import { WhyChooseUsServiceDetailsRow } from './serving-area-detail-sections/WhyChooseUsServiceDetailsRow';
 import { FAQs } from './serving-area-detail-sections/FAQs';
 import {
   ServingAreas,
-  stripStaticAreasFromConfig,
 } from './serving-area-detail-sections/ServingAreas';
+import { stripStaticAreasFromConfig } from '@/app/lib/servingAreasConfig';
 
 export interface ServingAreasdetailSectionData {
   hero?: unknown;
@@ -63,13 +62,15 @@ export const ServingAreasdetailSection: React.FC<ServingAreasdetailSectionProps>
         <OurServices services={data.ourServices} pageServiceId={data.pageServiceId} />
       ) : null}
       {data.cta ? <CTA cta={data.cta} /> : null}
-      {data.serviceDetails ? <ServiceDetails details={data.serviceDetails} /> : null}
       {data.serviceOverview != null &&
       typeof data.serviceOverview === 'object' &&
       (data.serviceOverview as { enabled?: boolean }).enabled !== false ? (
         <ServiceOverview overview={data.serviceOverview} />
       ) : null}
-      {whyChooseUs ? <WhyChooseUs whyChooseUs={whyChooseUs} /> : null}
+      <WhyChooseUsServiceDetailsRow
+        whyChooseUs={whyChooseUs}
+        serviceDetails={data.serviceDetails}
+      />
       {data.faqs ? <FAQs faqs={data.faqs} /> : null}
       {servingAreasEnabled ? <ServingAreas service={servingAreasConfig} /> : null}
     </div>

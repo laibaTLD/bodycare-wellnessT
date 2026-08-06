@@ -162,9 +162,10 @@ export function CompanyDetailSection({
             <p
               ref={descRef}
               className={cn(
-                'text-lg md:text-xl max-w-4xl mx-auto leading-relaxed wb-text-on-light-secondary transition-all duration-1000 delay-300',
+                'text-lg md:text-xl max-w-4xl mx-auto leading-relaxed transition-all duration-1000 delay-300',
                 descVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
               )}
+              style={{ color: theme.colors.secondaryText, fontFamily: theme.fonts.body }}
             >
               {description}
             </p>
@@ -265,7 +266,10 @@ export function CompanyDetailSection({
                       )}
 
                       {section.description && (
-                        <p className="text-lg leading-relaxed wb-text-on-light-secondary">
+                        <p
+                          className="text-lg leading-relaxed"
+                          style={{ color: theme.colors.secondaryText, fontFamily: theme.fonts.body }}
+                        >
                           {section.description}
                         </p>
                       )}

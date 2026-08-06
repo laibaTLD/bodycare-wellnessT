@@ -110,8 +110,12 @@ export function FAQSection({ faqSection, className }: FAQSectionProps) {
           )}
           {description && (
             <p
-              className="text-lg md:text-xl max-w-3xl mx-auto animate-fade-in-up wb-text-on-light-secondary"
-              style={{ animationDelay: '200ms', fontFamily: theme.fonts.body }}
+              className="text-lg md:text-xl max-w-3xl mx-auto animate-fade-in-up"
+              style={{
+                animationDelay: '200ms',
+                fontFamily: theme.fonts.body,
+                color: theme.colors.secondaryText,
+              }}
             >
               {description}
             </p>
@@ -175,7 +179,10 @@ export function FAQSection({ faqSection, className }: FAQSectionProps) {
             className="text-center mt-12 sm:mt-16 animate-fade-in-up"
             style={{ animationDelay: `${400 + questions.length * 100}ms` }}
           >
-            <p className="mb-4 text-lg wb-text-on-light-secondary" style={{ fontFamily: theme.fonts.body }}>
+            <p
+              className="mb-4 text-lg"
+              style={{ fontFamily: theme.fonts.body, color: theme.colors.secondaryText }}
+            >
               Still have questions? We&apos;re here to help!
             </p>
             {footerCta.external ? (

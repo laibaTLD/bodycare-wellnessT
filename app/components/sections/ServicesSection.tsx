@@ -2,13 +2,10 @@
 
 import { OptimizedImage, IMAGE_SIZES } from '@/app/components/ui/OptimizedImage';
 import Link from 'next/link';
-import { useMemo } from 'react';
+import { useMemo, useRef } from 'react';
 import type { Page, Service } from '@/app/lib/types';
 import { useWebBuilder } from '@/app/providers/WebBuilderProvider';
-import {
-  useScrollAnimation,
-  useStaggeredAnimation,
-} from '@/app/hooks/useScrollAnimation';
+import { useScrollAnimation, useStaggeredAnimation } from '@/app/hooks/useScrollAnimation';
 import { useSectionTheme } from '@/app/hooks/useSectionTheme';
 import { cn, getImageSrc } from '@/app/lib/utils';
 import { tiptapToText } from '@/app/lib/seo';
@@ -78,13 +75,14 @@ function ServiceCard({
 
   const card = (
     <div
-      className={`group relative h-[750px] transition-all duration-1000 ${
+      className={cn(
+        'group relative h-full transition-all duration-1000',
         visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'
-      }`}
+      )}
       style={{ transitionDelay: `${index * 180}ms` }}
     >
       <div
-        className="relative flex h-full min-h-full flex-col bg-white/90 backdrop-blur-sm rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-6 hover:scale-105 border group"
+        className="relative flex h-full min-h-[520px] flex-col bg-white/90 backdrop-blur-sm rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 sm:hover:-translate-y-4 hover:scale-[1.02] border group"
         style={theme.styles.card}
       >
         <div className="relative aspect-[4/3] shrink-0 overflow-hidden">
@@ -121,19 +119,17 @@ function ServiceCard({
           </div>
         </div>
 
-        <div className="flex flex-1 flex-col p-8">
+        <div className="flex min-h-0 flex-1 flex-col p-6 sm:p-8">
           <h3
-            className="text-2xl md:text-3xl font-semibold leading-tight group-hover:text-[var(--wb-primary)] transition-colors duration-300"
+            className="text-xl sm:text-2xl md:text-3xl font-semibold leading-tight line-clamp-2 min-h-[2.75em] group-hover:text-[var(--wb-primary)] transition-colors duration-300"
             style={{ ...theme.styles.titleGradient, fontFamily: theme.fonts.heading }}
           >
             {service.name}
           </h3>
 
-          {service.description && (
-            <p className="mt-6 flex-1 leading-relaxed wb-text-on-light-secondary">
-              {service.description}
-            </p>
-          )}
+          <p className="mt-4 flex-1 text-sm sm:text-base leading-relaxed wb-text-on-light-secondary line-clamp-4">
+            {service.description || '\u00A0'}
+          </p>
 
           <div className="mt-auto flex items-center justify-center space-x-2 pt-6 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
             <div className="w-2 h-2 rounded-full animate-ping" style={{ ...theme.styles.floatingDot, animationDelay: '0s' }} />
@@ -157,7 +153,7 @@ function ServiceCard({
   );
 
   return (
-    <Link href={service.href} className="block h-full w-[300px] md:w-[350px]">
+    <Link href={service.href} className="flex h-full w-full min-h-[520px]">
       {card}
     </Link>
   );
@@ -188,14 +184,22 @@ export function ServicesSection({
     return selected.map(mapServiceToDisplay);
   }, [servicesSection?.serviceIds, allServices]);
 
+  // Keep last non-empty list so async reloads / polls don't flash empty cards away.
+  const stableServicesRef = useRef<DisplayService[]>([]);
+  if (displayServices.length > 0) {
+    stableServicesRef.current = displayServices;
+  }
+  const servicesToShow =
+    displayServices.length > 0 ? displayServices : stableServicesRef.current;
+
   const { ref: titleRef, isVisible: titleVisible } =
     useScrollAnimation<HTMLHeadingElement>({ threshold: 0.2 });
   const { ref: descRef, isVisible: descVisible } =
     useScrollAnimation<HTMLParagraphElement>({ threshold: 0.2 });
-  const { ref: gridRef, visibleItems } = useStaggeredAnimation(displayServices.length, 180);
+  const { ref: gridRef, visibleItems } = useStaggeredAnimation(servicesToShow.length, 180);
 
   if (!servicesSection || servicesSection.enabled === false) return null;
-  if (!title && !description && displayServices.length === 0) return null;
+  if (!title && !description && servicesToShow.length === 0) return null;
 
   return (
     <section
@@ -294,27 +298,29 @@ export function ServicesSection({
             <p
               ref={descRef}
               className={cn(
-                'text-lg md:text-xl max-w-4xl mx-auto leading-relaxed wb-text-on-light-secondary transition-all duration-1000 delay-300',
+                'text-lg md:text-xl max-w-4xl mx-auto leading-relaxed transition-all duration-1000 delay-300',
                 descVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
               )}
+              style={{ color: theme.colors.secondaryText, fontFamily: theme.fonts.body }}
             >
               {description}
             </p>
           )}
         </div>
 
-        {displayServices.length > 0 && (
-          <div ref={gridRef} className="flex flex-wrap items-stretch justify-center gap-8 lg:gap-10">
-            {displayServices.map((service, index) => (
-              <ServiceCard
-                key={service.id}
-                service={service}
-                index={index}
-                visible={visibleItems.includes(index)}
-              />
-            ))}
-          </div>
-        )}
+        <div
+          ref={gridRef}
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-10 items-stretch auto-rows-fr"
+        >
+          {servicesToShow.map((service, index) => (
+            <ServiceCard
+              key={service.id}
+              service={service}
+              index={index}
+              visible={visibleItems.includes(index)}
+            />
+          ))}
+        </div>
       </div>
 
       <style jsx>{`

@@ -255,8 +255,9 @@ export function ServingAreasSection({ servingAreasSection, className }: ServingA
 
         <div
           className={cn(
-            'flex justify-center gap-2 sm:gap-3 lg:gap-4',
-            'flex-nowrap overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0 sm:overflow-visible'
+            'flex justify-start sm:justify-center gap-2 sm:gap-3 lg:gap-4',
+            'flex-nowrap overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0',
+            'lg:flex-wrap lg:overflow-visible'
           )}
         >
           {serviceAreas.map((area, index) => (

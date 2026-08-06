@@ -208,19 +208,14 @@ export function HeroSection({ hero, page, className }: HeroSectionProps) {
     ctaButton.href.startsWith('tel:');
 
   const ctaClassName = cn(
-    'inline-block px-8 py-4 font-medium text-sm tracking-wide uppercase transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 hover:scale-105 group relative overflow-hidden',
+    'inline-flex w-fit self-start items-center px-8 py-4 font-medium text-sm tracking-wide uppercase no-underline transition-opacity duration-300 hover:opacity-90',
     descriptionVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
   );
 
   const ctaStyle: React.CSSProperties = {
+    ...styles.primaryCta,
     fontFamily: fonts.body,
-    backgroundColor: colors.mainText,
-    color: 'var(--wb-text-on-dark, #fff)',
     transitionDelay: '700ms',
-  };
-
-  const ctaHoverOverlayStyle: React.CSSProperties = {
-    background: `linear-gradient(to right, ${colors.primaryButton}, ${colors.hoverActive || colors.primaryButton})`,
   };
 
   const renderGalleryCell = (
@@ -258,11 +253,11 @@ export function HeroSection({ hero, page, className }: HeroSectionProps) {
   };
 
   const gridCellBase =
-    'rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-500 group';
+    'h-full min-h-0 rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-500 group';
 
   return (
     <section
-      className={cn('relative pt-2 pb-4 lg:pt-6 lg:pb-8 overflow-hidden', className)}
+      className={cn('relative pt-0 pb-4 lg:pb-8 overflow-hidden', className)}
       style={{ fontFamily: fonts.body }}
     >
       {/* Animated Background gradient driven by site engine state styles */}
@@ -285,15 +280,15 @@ export function HeroSection({ hero, page, className }: HeroSectionProps) {
         ))}
       </div>
 
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-start justify-center min-h-[85vh]">
-        <div className="w-full grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full grid lg:grid-cols-2 gap-8 sm:gap-10 lg:gap-12 items-stretch py-4 sm:py-6">
           
           {/* Left Column - Dynamic Builder Content Engine */}
-          <div className="space-y-8">
+          <div className="flex h-full min-w-0 flex-col justify-center space-y-4 sm:space-y-6">
             <h1
               ref={titleRef}
               className={cn(
-                'text-5xl md:text-6xl lg:text-7xl xl:text-7xl font-bold leading-[1.1] transition-all duration-1000 hover:scale-105 cursor-default',
+                'text-3xl sm:text-4xl md:text-[2.75rem] lg:text-5xl font-bold leading-[1.15] break-words transition-all duration-1000 hover:scale-105 cursor-default',
                 titleVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
               )}
               style={{ 
@@ -311,7 +306,7 @@ export function HeroSection({ hero, page, className }: HeroSectionProps) {
               <h2
                 ref={subtitleRef}
                 className={cn(
-                  'text-lg md:text-xl font-normal leading-relaxed transition-all duration-1000 delay-300',
+                  'text-base sm:text-lg md:text-xl font-normal leading-relaxed transition-all duration-1000 delay-300',
                   subtitleVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
                 )}
                 style={{ color: colors.mainText, opacity: 0.8 }}
@@ -336,29 +331,21 @@ export function HeroSection({ hero, page, className }: HeroSectionProps) {
             {ctaButton &&
               (ctaIsExternal ? (
                 <a href={ctaButton.href} className={ctaClassName} style={ctaStyle}>
-                  <span className="relative z-10 group-hover:animate-pulse">{ctaButton.label} →</span>
-                  <div
-                    className="absolute inset-0 translate-x-[-100%] group-hover:translate-x-0 transition-transform duration-500"
-                    style={ctaHoverOverlayStyle}
-                  />
+                  {ctaButton.label} →
                 </a>
               ) : (
                 <Link href={ctaButton.href} className={ctaClassName} style={ctaStyle}>
-                  <span className="relative z-10 group-hover:animate-pulse">{ctaButton.label} →</span>
-                  <div
-                    className="absolute inset-0 translate-x-[-100%] group-hover:translate-x-0 transition-transform duration-500"
-                    style={ctaHoverOverlayStyle}
-                  />
+                  {ctaButton.label} →
                 </Link>
               ))}
           </div>
 
           {/* Right Column - Premium Graphic Matrix Shell */}
-          <div className="relative" ref={imageGridRef}>
+          <div className="relative flex h-full min-h-[280px] sm:min-h-[340px] lg:min-h-full min-w-0 flex-col overflow-hidden" ref={imageGridRef}>
             {/* Animated decorative plant elements */}
             <div
               className={cn(
-                'absolute -top-10 -right-10 w-32 h-32 opacity-30 transition-all duration-1000',
+                'absolute -top-10 -right-10 z-10 w-32 h-32 opacity-30 transition-all duration-1000 hidden sm:block pointer-events-none',
                 imageGridVisible ? 'animate-sway rotate-12' : 'opacity-0 scale-50'
               )}
             >
@@ -375,7 +362,7 @@ export function HeroSection({ hero, page, className }: HeroSectionProps) {
             {/* Bottom left plant with breathing animation */}
             <div
               className={cn(
-                'absolute -bottom-5 -left-5 w-24 h-24 opacity-40 transition-all duration-1000',
+                'absolute -bottom-5 -left-5 z-10 w-24 h-24 opacity-40 transition-all duration-1000 hidden sm:block pointer-events-none',
                 imageGridVisible ? 'animate-breathe' : 'opacity-0 scale-50'
               )}
             >
@@ -386,8 +373,8 @@ export function HeroSection({ hero, page, className }: HeroSectionProps) {
               </svg>
             </div>
 
-            {/* Image Grid with structural assignments */}
-            <div className="grid grid-cols-2 gap-4 h-[500px]">
+            {/* Image Grid — fills the column so both sides match height */}
+            <div className="grid h-full min-h-[280px] sm:min-h-[340px] lg:min-h-[420px] grid-cols-2 gap-3 sm:gap-4">
               {renderGalleryCell(
                 0,
                 'yoga',
@@ -418,9 +405,9 @@ export function HeroSection({ hero, page, className }: HeroSectionProps) {
             </div>
 
             {/* Enhanced floating decorative theme indicators */}
-            <div className="absolute top-1/3 -right-6 w-4 h-4 rounded-full opacity-30 animate-float" style={{ backgroundColor: colors.primaryButton, animationDelay: '0s', animationDuration: '3s' }} />
-            <div className="absolute bottom-1/3 -left-3 w-3 h-3 rounded-full opacity-40 animate-float" style={{ backgroundColor: colors.primaryButton, animationDelay: '1s', animationDuration: '4s' }} />
-            <div className="absolute top-1/4 left-1/4 w-2 h-2 rounded-full opacity-50 animate-float" style={{ backgroundColor: colors.primaryButton, animationDelay: '2s', animationDuration: '5s' }} />
+            <div className="absolute top-1/3 -right-6 w-4 h-4 rounded-full opacity-30 animate-float pointer-events-none" style={{ backgroundColor: colors.primaryButton, animationDelay: '0s', animationDuration: '3s' }} />
+            <div className="absolute bottom-1/3 -left-3 w-3 h-3 rounded-full opacity-40 animate-float pointer-events-none" style={{ backgroundColor: colors.primaryButton, animationDelay: '1s', animationDuration: '4s' }} />
+            <div className="absolute top-1/4 left-1/4 w-2 h-2 rounded-full opacity-50 animate-float pointer-events-none" style={{ backgroundColor: colors.primaryButton, animationDelay: '2s', animationDuration: '5s' }} />
           </div>
         </div>
       </div>
